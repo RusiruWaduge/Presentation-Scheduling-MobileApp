@@ -33,7 +33,7 @@ const UserProfile = () => {
         style={styles.button}
         onPress={() => navigation.navigate('StdProfile')}
       >
-        <Text style={styles.buttonText}>View Profile</Text>
+        <Text style={styles.buttonText}>View your Performance</Text>
       </TouchableOpacity>
     </View>
   );
@@ -41,17 +41,21 @@ const UserProfile = () => {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1, // Take full height of the screen
+    justifyContent: 'center', // Center vertically
+    alignItems: 'center', // Center horizontally
     padding: 20,
-    backgroundColor: '#ffffff',
-    alignItems: 'center',
-    borderRadius: 12,
-    marginVertical: 20,
-    elevation: 5,
+    backgroundColor: 'white', // Gradient background
+    borderRadius: 20,
+    elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    width: '100%', // Make it responsive on different screens
+    marginBottom: 0, // Remove negative margin
   },
+  
   profilePic: {
     width: 120,
     height: 120,
@@ -88,6 +92,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 3,
+    
   },
   buttonText: {
     fontSize: 16,
@@ -99,3 +104,4 @@ const styles = StyleSheet.create({
 });
 
 export default UserProfile;
+

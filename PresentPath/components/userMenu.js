@@ -8,7 +8,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import ProfilePage from './userProfile';
 import StdProfile from './profile';
 import Feedback from './feedBack';
-import Student from './student'
+import Home from './home'
 
 const Stack = createStackNavigator();
 
@@ -18,11 +18,12 @@ const UserMenu = () => {
   return (
     <>
       {/* Navigation Stack */}
-      <Stack.Navigator initialRouteName="Student" screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Student" component={Student} />
+      <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
+
         <Stack.Screen name="StdProfile" component={StdProfile} />
         <Stack.Screen name="Profile" component={ProfilePage} />
         <Stack.Screen name="Feedback" component={Feedback} />
+        <Stack.Screen name="Home" component={Home} />
       </Stack.Navigator>
 
       {/* Bottom Menu */}
@@ -30,7 +31,7 @@ const UserMenu = () => {
         {/* Navigate to Student Profile */}
         <TouchableOpacity
           style={styles.menuItem}
-          onPress={() => navigation.navigate('Student')}
+          onPress={() => navigation.navigate('Home')}
         >
           <Icon name="home" size={28} color="#003366" />
         </TouchableOpacity>

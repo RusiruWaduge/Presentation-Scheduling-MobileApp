@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 
 // Import UserMenu (handles navigation internally)
 import UserMenu from './components/userMenu';
+import TopBar from './components/topBar';
 
 export default function App() {
   return (
@@ -11,6 +12,7 @@ export default function App() {
       <View style={styles.container}>
         {/* UserMenu handles all screens and navigation */}
         <UserMenu />
+      
       </View>
     </NavigationContainer>
   );
