@@ -2,6 +2,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { ScrollView, View, Text, StyleSheet, TouchableOpacity, Alert, FlatList, ActivityIndicator } from 'react-native';
 import { generateFeedback } from './gemini'; // Assuming generateFeedback is a function to generate feedback
 import TopBar from './topBar';
+import * as Print from 'expo-print';
+import { shareAsync } from 'expo-sharing';
 
 // Appwrite imports
 import { Client, Databases, Query } from 'appwrite';
@@ -48,7 +50,6 @@ const Profile = () => {
       const filteredMarks = marks.filter((mark) =>
         selectedYear === 'overall' ? true : mark.Year.toString() === selectedYear.replace('year', '')
       );
-      
   
       if (filteredMarks.length === 0) {
         setFeedbackData((prevState) => ({
@@ -79,7 +80,6 @@ const Profile = () => {
     }
   }, [marks]);
   
-
   useEffect(() => {
     fetchFeedback(selectedYear); // Fetch feedback whenever the selected year changes
   }, [selectedYear, fetchFeedback]);
@@ -107,7 +107,62 @@ const Profile = () => {
       <Text style={styles.text}>Presentation Type: {item.Presentation || 'N/A'}</Text>
     </View>
   );
-  
+
+  const generatePDF = async () => {
+    const htmlContent = `
+      <html>
+        <body>
+          <h1>Student Performance Report</h1>
+          <h2>Year: ${selectedYear === 'overall' ? 'Overall' : selectedYear}</h2>
+          <h3>Feedback:</h3>
+          <p>${currentData.feedback || 'No feedback available.'}</p>
+          <p><strong>Examiner:</strong> ${currentData.examiner || 'N/A'}</p>
+          <p><strong>Status:</strong> ${currentData.status || 'N/A'}</p>
+          <p><strong>Created At:</strong> ${currentData.$createdAt ? new Date(currentData.$createdAt).toLocaleString() : 'N/A'}</p>
+          <p><strong>Updated At:</strong> ${currentData.$updatedAt ? new Date(currentData.$updatedAt).toLocaleString() : 'N/A'}</p>
+          <h3>Marks:</h3>
+          <table border="1" cellspacing="0" cellpadding="5">
+            <tr>
+              <th>Student No</th>
+              <th>Score</th>
+              <th>Presentation Skills</th>
+              <th>Slide Design</th>
+              <th>Engagement</th>
+              <th>Time Management</th>
+              <th>Year</th>
+              <th>Semester</th>
+              <th>Presentation Type</th>
+            </tr>
+            ${filteredMarks.map(item => `
+              <tr>
+                <td>${item.Student_no || 'N/A'}</td>
+                <td>${item.Content_Quality || 'N/A'}</td>
+                <td>${item.Presentation_Skills || 'N/A'}</td>
+                <td>${item.Slide_Design || 'N/A'}</td>
+                <td>${item.Engagement_And_Interaction || 'N/A'}</td>
+                <td>${item.Time_Management || 'N/A'}</td>
+                <td>${item.Year || 'N/A'}</td>
+                <td>${item.Semester || 'N/A'}</td>
+                <td>${item.Presentation || 'N/A'}</td>
+              </tr>
+            `).join('')}
+          </table>
+        </body>
+      </html>
+    `;
+
+    try {
+      const { uri } = await Print.printToFileAsync({ html: htmlContent });
+      console.log('PDF generated at: ', uri);
+
+      // Optionally share the PDF
+      await shareAsync(uri);
+
+    } catch (error) {
+      console.error('Error generating PDF: ', error);
+    }
+  };
+
 
   return (
     <ScrollView style={styles.container}>
@@ -182,6 +237,11 @@ const Profile = () => {
           </View>
         )}
       </View>
+
+      {/* Generate PDF Button */}
+      <TouchableOpacity style={styles.generateButton} onPress={generatePDF}>
+        <Text style={styles.buttonText}>Generate Report</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -214,11 +274,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#2196F3',
     borderRadius: 8,
     marginBottom: 10, // Space between buttons
-    // Align to the left side of the container
-    marginLeft: -25, // Add left margin for consistent spacing
     width: 'auto', // Adjust width based on content
   },
-  
 
   activeButton: {
     backgroundColor: '#FF5722',
@@ -226,60 +283,40 @@ const styles = StyleSheet.create({
 
   buttonText: {
     fontSize: 16,
+    fontWeight: 'bold',
     color: '#fff',
+    textAlign: 'center',
   },
 
   activeButtonText: {
-    color: '#fff',
+    color: '#fff', // Active button text color
   },
 
-  feedbackContainer: {
-    backgroundColor: '#FFEBEE',
-    padding: 20,
-    borderRadius: 10,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-
-  sectionTitle: {
-    fontSize: 18,
+  marksHeader: {
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 10,
   },
 
-  feedbackText: {
-    fontSize: 16,
-    color: '#555',
+  generateButton: {
+    backgroundColor: '#FF5722',
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 8,
+    marginTop: 20,
   },
 
-  examiner: {
-    fontSize: 16,
-    color: '#555',
-    marginTop: 5,
-  },
-
-  status: {
-    fontSize: 16,
-    color: '#555',
-    marginTop: 5,
-  },
-
-  date: {
-    fontSize: 14,
-    color: '#888',
-    marginTop: 5,
-  },
-
-  marksContainer: {
+  feedbackContainer: {
+    backgroundColor: '#fff',
+    padding: 15,
     marginBottom: 20,
-  },
-
-  semesterContainer: {
-    marginBottom: 20,
+    borderRadius: 8,
+    elevation: 2, // Shadow for Android
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 3 },
   },
 
   semesterTitle: {
@@ -289,38 +326,69 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 
-  marksHeader: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 15,
+  list: {
+    paddingBottom: 30,
   },
 
-  card: {
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
+  marksContainer: {
+    marginBottom: 25,
   },
 
-  title: {
+  semesterContainer: {
+    marginBottom: 20,
+  },
+
+  sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
   },
 
-  text: {
+  feedbackText: {
     fontSize: 16,
-    color: '#555',
+    color: '#333',
+    marginVertical: 8,
+  },
+
+  examiner: {
+    fontSize: 14,
+    color: '#333',
     marginTop: 5,
   },
 
-  list: {
-    paddingBottom: 50,
+  status: {
+    fontSize: 14,
+    color: '#333',
+    marginTop: 5,
+  },
+
+  date: {
+    fontSize: 14,
+    color: '#333',
+    marginTop: 5,
+  },
+
+  card: {
+    backgroundColor: '#fff',
+    padding: 15,
+    marginBottom: 10,
+    borderRadius: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 3 },
+  },
+
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+
+  text: {
+    fontSize: 14,
+    marginBottom: 5,
   },
 });
 
