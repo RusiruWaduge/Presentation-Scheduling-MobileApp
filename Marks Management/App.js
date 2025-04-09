@@ -3,9 +3,9 @@ import 'react-native-gesture-handler';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import PresentationMarks from '../Marks Management2/PresentationMarks'; // Page for submitting marks
-import StudentMarksList from '../Marks Management2/Student_Marks_List'; // Page for viewing submitted marks
-import StudentCards from '../Marks Management2/StudentCards';
+import PresentationMarks from '../Marks Management/PresentationMarks'; // Page for submitting marks
+import StudentMarksList from '../Marks Management/Student_Marks_List'; // Page for viewing submitted marks
+import StudentCards from '../Marks Management/StudentCards';
 
 const Stack = createStackNavigator();
 
