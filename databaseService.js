@@ -1,5 +1,5 @@
 // databaseservice.js
-import { Databases, ID } from 'appwrite';
+import { Databases, ID , Query } from 'appwrite';
 import client from './appwrite';
 
 const databases = new Databases(client);
@@ -52,7 +52,7 @@ export const UpdateSchedule = async (documentId, data) => {
 };
 
 // Function to fetch schedules
-export const GetSchedules = async () => {
+export const GetSchedules = async (searchQuery = '') => {
   const databaseId = '67dd8a42000b2f5184aa'; // Ensure this databaseId is correct
   const collectionId = 'PresentationSchedules'; // Ensure this collectionId is correct
 
@@ -60,7 +60,10 @@ export const GetSchedules = async () => {
     console.log("Fetching from Database ID:", databaseId);
     console.log("Fetching from Collection ID:", collectionId);
 
-    const response = await databases.listDocuments(databaseId, collectionId);
+     // If there's a search query, filter by title field
+     const query = searchQuery ? [Query.search('title', searchQuery)] : [];
+
+    const response = await databases.listDocuments(databaseId, collectionId, query);
     console.log('Schedules fetched successfully:', response.documents);
     return response.documents;
   } catch (error) {

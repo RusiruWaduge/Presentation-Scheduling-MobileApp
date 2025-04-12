@@ -9,6 +9,7 @@ import {
   Animated,
   Modal 
 } from 'react-native';
+import { TextInput } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -23,9 +24,9 @@ import CreateSchedule from './CreateSchedule';
 import Notifications from './Notifications';
 import Profile from './Profile';
 import EditSchedule from './EditSchedule';
+import Report from './Report';
 
-
-// Import your Appwrite service method for fetching schedules
+// Appwrite service method for fetching schedules
 import { SaveCompletedPresentation } from '../databaseService';
 import { GetSchedules,  GetCompletedPresentations } from '../databaseService';
 import { deleteDocument } from '../databaseService';
@@ -78,6 +79,8 @@ const screen1 = () => {
   const [completedPresentations, setCompletedPresentations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
+ 
+
 
   // State and handlers for our custom confirmation modal
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
@@ -200,88 +203,140 @@ const screen1 = () => {
   };
 
 
-  // ---------- Dashboard Component (Scheduled Presentations) ----------
-  const Dashboard = ({ scheduledPresentations, onDelete, onComplete, fetchSchedules }) => {
-    const navigation = useNavigation();
-    const [refreshing, setRefreshing] = useState(false);
-    const fadeAnim = new Animated.Value(0);
+ // ---------- Dashboard Component (Scheduled Presentations) ----------
+ const Dashboard = ({ scheduledPresentations, onDelete, onComplete, fetchSchedules }) => {
+  const navigation = useNavigation();
+  const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');  // State for search query
+  const fadeAnim = new Animated.Value(0);
 
-    const onRefresh = () => {
-      setRefreshing(true);
-      fetchSchedules().finally(() => setRefreshing(false));
-    };
-
-    const fadeIn = () => {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }).start();
-    };
-    
-
-    const renderPresentation = ({ item }) => (
-      <Animated.View style={[styles.presentationItem, { opacity: fadeAnim }]}> 
-        <View style={styles.presentationInfo}>
-          <Text style={styles.presentationTitle}>{item.title}</Text>
-          <Text style={styles.presentationDetails}>Group ID: {item.group_id}</Text>
-          <Text style={styles.presentationDetails}>Semester: {item.semester}</Text>
-          <Text style={styles.presentationDetails}>
-            {formatDate(item.date)} at {formatTime(item.time)}
-          </Text>
-          <Text style={styles.presentationDetails}>Venue: {item.venue}</Text>
-        </View>
-        <View style={styles.iconContainer}>
-          <TouchableOpacity onPress={() => 
-          
-            // Navigate directly to EditSchedule with the presentation ID
-          navigation.navigate('EditSchedule', { scheduleId: item.$id }) 
-          }
-          >
-            <Ionicons name="create-outline" size={24} color="#007bff" style={styles.icon} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => onDelete(item)}>
-            <Ionicons name="trash-outline" size={24} color="#ff4242" style={styles.icon} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => onComplete(item)}>
-            <Ionicons name="checkmark-done-outline" size={24} color="#28a745" style={styles.icon} />
-          </TouchableOpacity>
-        </View>
-      </Animated.View>
-    );
-    
-    return (
-      <View style={styles.container}>
-        <Text style={styles.header}>Scheduled Presentations</Text>
-        {scheduledPresentations.length === 0 ? (
-          <Text style={styles.noDataText}>No scheduled presentations.</Text>
-        ) : (
-          <FlatList
-            data={scheduledPresentations}
-            keyExtractor={(item) => item.$id}
-            renderItem={renderPresentation}
-            style={styles.list}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-            onLayout={fadeIn}
-          />
-        )}
-        <LinearGradient 
-          colors={['#4c669f', '#3b5998', '#192f6a']} 
-          style={styles.gradientButton}
-        >
-          <TouchableOpacity 
-            onPress={() => navigation.navigate('CreateSchedule')} 
-            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
-          >
-            <Text style={styles.buttonText}>Create New Schedule</Text>
-          </TouchableOpacity>
-        </LinearGradient>
-      </View>
-    );
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchSchedules().finally(() => setRefreshing(false));
   };
+
+  const fadeIn = () => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  // Search Bar Component
+  const renderSearchBar = () => (
+    <View style={styles.searchBarContainer}>
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Search by title..."
+        value={searchQuery}
+        onChangeText={(text) => setSearchQuery(text)}
+      />
+      <Ionicons 
+        name="search" 
+        size={20} 
+        color="#999" 
+        style={styles.searchIcon}
+      />
+      {searchQuery.length > 0 && (
+        <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearIcon}>
+          <Ionicons name="close-circle" size={20} color="#999" />
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+
+  const filteredPresentations = scheduledPresentations.filter(item =>
+    item.title.toLowerCase().startsWith(searchQuery.toLowerCase())
+  );
+
+  const renderPresentation = ({ item }) => (
+    <Animated.View style={[styles.presentationItem, { opacity: fadeAnim }]}>
+      <View style={styles.presentationInfo}>
+        <Text style={styles.presentationTitle}>{item.title}</Text>
+        <Text style={styles.presentationDetails}>Group ID: {item.group_id}</Text>
+        <Text style={styles.presentationDetails}>Semester: {item.semester}</Text>
+        <Text style={styles.presentationDetails}>
+          {formatDate(item.date)} at {formatTime(item.time)}
+        </Text>
+        <Text style={styles.presentationDetails}>Venue: {item.venue}</Text>
+      </View>
+      <View style={styles.iconContainer}>
+        <TouchableOpacity onPress={() => navigation.navigate('EditSchedule', { scheduleId: item.$id })}>
+          <Ionicons name="create-outline" size={24} color="#007bff" style={styles.icon} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => onDelete(item)}>
+          <Ionicons name="trash-outline" size={24} color="#ff4242" style={styles.icon} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => onComplete(item)}>
+          <Ionicons name="checkmark-done-outline" size={24} color="#28a745" style={styles.icon} />
+        </TouchableOpacity>
+      </View>
+    </Animated.View>
+  );
+
+  return (
+    <View style={styles.container}>
+      {renderSearchBar()}  {/* Render the search bar at the top */}
+      
+      <Text style={styles.header}>Scheduled Presentations</Text>
+      {filteredPresentations.length === 0 ? (
+        <Text style={styles.noDataText}>No scheduled presentations.</Text>
+      ) : (
+        <FlatList
+          data={filteredPresentations}
+          keyExtractor={(item) => item.$id}
+          renderItem={renderPresentation}
+          style={styles.list}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          onLayout={fadeIn}
+        />
+      )}
+
+      {/* Report Generation Button at the bottom */}
+      <TouchableOpacity
+        style={styles.reportButton}
+        onPress={() => navigation.navigate('Report', { scheduledPresentations })}
+      >
+        <Text style={styles.reportButtonText}>Analyze Schedule</Text>
+      </TouchableOpacity>     
+
+    </View>
+  )
+  
+};
+
 
   // ---------- CompletedPresentations Component – Displays Completed Presentations ----------
   const CompletedPresentations = ({ completedPresentations, onDeleteCompleted }) => {
+    const [searchQuery, setSearchQuery] = useState('');  // State for search query
+  
+    const renderSearchBar = () => (
+      <View style={styles.searchBarContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by title..."
+          value={searchQuery}
+          onChangeText={(text) => setSearchQuery(text)}
+        />
+        <Ionicons 
+          name="search" 
+          size={20} 
+          color="#999" 
+          style={styles.searchIcon}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearIcon}>
+            <Ionicons name="close-circle" size={20} color="#999" />
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  
+    const filteredCompletedPresentations = completedPresentations.filter(item =>
+      item.title.toLowerCase().startsWith(searchQuery.toLowerCase())
+    );
+  
     const renderCompleted = ({ item }) => (
       <View style={styles.presentationItem}>
         <View style={styles.presentationInfo}>
@@ -293,7 +348,7 @@ const screen1 = () => {
           </Text>
           <Text style={styles.presentationDetails}>Venue: {item.venue}</Text>
           <Text style={[styles.presentationDetails, { color: 'green' }]}>
-          {item.status || "Completed"}
+            {item.status || "Completed"}
           </Text>
         </View>
         <TouchableOpacity onPress={() => onDeleteCompleted(item)}>
@@ -301,16 +356,16 @@ const screen1 = () => {
         </TouchableOpacity>
       </View>
     );
-
   
     return (
       <View style={styles.container}>
+        {renderSearchBar()}  {/* Render the search bar at the top */}
         <Text style={styles.header}>Completed Presentations</Text>
-        {completedPresentations.length === 0 ? (
+        {filteredCompletedPresentations.length === 0 ? (
           <Text style={styles.noDataText}>No completed presentations.</Text>
         ) : (
           <FlatList
-            data={completedPresentations}
+            data={filteredCompletedPresentations}
             keyExtractor={(item) => item.$id}
             renderItem={renderCompleted}
             style={styles.list}
@@ -434,7 +489,14 @@ const screen1 = () => {
           component={EditSchedule} 
         
         />
-      </Stack.Navigator>
+        <Stack.Screen 
+          name="Report" 
+          component={Report} 
+        />
+        
+    </Stack.Navigator>
+
+      
 
       {/* Custom Confirmation Modal */}
       <Modal
@@ -714,6 +776,75 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     margin: 4,
   },
+
+searchBarContainer: {
+  flexDirection: 'row',  // Align the input and icon horizontally
+  alignItems: 'center',  // Vertically center the content
+  marginBottom: 15,  // Optional: Adjust the space above/below search bar
+  paddingHorizontal: 15,  // Padding for inner content
+  backgroundColor: '#f0f4f7',  // Light background color for the search bar
+  borderRadius: 8,  // Rounded corners for the container
+  elevation: 5,  // Optional: Shadow for a clean effect
+  shadowColor: '#000',  // Optional: Shadow color for iOS
+  shadowOpacity: 0.1,  // Optional: Shadow opacity for iOS
+  shadowRadius: 8,  // Optional: Shadow blur for iOS
+  shadowOffset: { width: 0, height: 2 },  // Optional: Shadow offset for iOS
+},
+
+searchInput: {
+  flex: 1,  // Take up available space for input field
+  height: 40,  // Height of the input field
+  borderColor: '#ccc',  // Light border color
+  borderWidth: 1,  // Thin border
+  borderRadius: 8,  // Rounded corners for the input
+  paddingLeft: 15,  // Padding for the left side of the input
+  paddingRight: 35,  // Space for the search icon on the right
+  backgroundColor: '#fff',  // White background for input
+  fontSize: 16,  // Font size for the text inside the input
+  color: '#333',  // Text color
+  letterSpacing: 0.5,  // Slight letter spacing for cleaner look
+},
+
+searchIcon: {
+  marginLeft: 10,  // Space between the input and the search icon
+  marginRight: 15,  // Optional: Space between the icon and the right edge
+  color: '#999',  // Color of the search icon
+},
+
+clearIcon: {
+  position: 'absolute',  // Position the clear icon inside the input
+  right: 10,  // Position the icon at the right
+  top: '50%',  // Vertically center the icon
+  transform: [{ translateY: -12 }],  // Adjust vertical position for perfect centering
+},
+
+//report button styling
+reportButton: {
+  position: 'absolute',
+  bottom: 20,       // 20 pixels from the bottom edge
+  right: 20,        // 20 pixels from the right edge
+  backgroundColor: '#28a745', // Modern green color for the button
+  paddingVertical: 8,         // Compact padding for a smaller button
+  paddingHorizontal: 12,
+  borderRadius: 20,
+  alignItems: 'center',
+  justifyContent: 'center',
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.15,
+  shadowRadius: 4,
+  elevation: 3,  // For Android shadow
+},
+reportButtonText: {
+  color: '#fff',
+  fontSize: 14,   // Smaller font size for a compact look
+  fontWeight: '600',
+  textAlign: 'center',
+},
+
+
+
+  
 });
 
 

@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import RNPickerSelect from 'react-native-picker-select';
-import DatePicker from 'react-native-modern-datepicker'; // Pure JS date picker
+import CalendarPicker from 'react-native-calendar-picker';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { parse, isValid, format } from 'date-fns';
@@ -257,47 +257,47 @@ const EditSchedule = () => {
 
         {/* Date Picker Field */}
         <View style={styles.field}>
-          <Ionicons name="calendar-outline" size={20} color="#007bff" style={styles.icon} />
-          <ShakeableView error={errors.date} style={styles.inputContainer}>
-            <TouchableOpacity
-              onPress={() => setOpenDateModal(true)}
-              style={styles.datePicker}
-            >
-              <Text style={styles.input}>
-                {form.date
-                  ? new Date(form.date).toLocaleDateString()
-                  : 'Select Date (MM.DD.YYYY)'}
-              </Text>
+  <Ionicons name="calendar-outline" size={20} color="#007bff" style={styles.icon} />
+  <ShakeableView error={errors.date} style={styles.inputContainer}>
+    <TouchableOpacity onPress={() => setOpenDateModal(true)} style={styles.datePicker}>
+      <Text style={styles.input}>
+        {form.date
+          ? format(new Date(form.date), 'MM.dd.yyyy') // Display formatted date if selected
+          : "Select Date (MM.DD.YYYY)"} 
+      </Text>
             </TouchableOpacity>
           </ShakeableView>
           {errors.date && <Text style={styles.errorText}>{errors.date}</Text>}
         </View>
-        <Modal visible={openDateModal} transparent animationType="slide">
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <DatePicker
-                options={{
-                  backgroundColor: '#fff',
-                  textHeaderColor: '#007bff',
-                  textDefaultColor: '#000',
-                  selectedTextColor: '#007bff',
-                  mainColor: '#007bff',
-                  textSecondaryColor: '#d3d3d3',
-                  borderColor: 'rgba(122, 146, 165, 0.1)',
-                }}
-                current={
-                  form.date && isValid(new Date(form.date))
-                    ? format(new Date(form.date), "yyyy/MM/dd")
-                    : format(new Date(), "yyyy/MM/dd")
-                }
-                onSelectedChange={handleDateSelect}
-              />
-              <TouchableOpacity style={styles.modalButton} onPress={() => setOpenDateModal(false)}>
-                <Text style={styles.modalButtonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
+     <Modal
+      transparent={true}
+      animationType="slide"
+      visible={openDateModal}
+      onRequestClose={() => setOpenDateModal(false)}
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          <CalendarPicker
+            onDateChange={(selectedDate) => {
+              const formattedDate = format(new Date(selectedDate), 'yyyy-MM-dd'); // Store as ISO format
+              setForm({ ...form, date: formattedDate });
+              setOpenDateModal(false); // Close modal after selection
+            }}
+            selectedStartDate={form.date ? new Date(form.date) : undefined}
+            textStyle={{ color: '#007bff' }}
+            todayBackgroundColor="#e6ffe6"
+            selectedDayColor="#007bff"
+            selectedDayTextColor="#ffffff"
+          />
+          <TouchableOpacity
+            style={styles.modalButton}
+            onPress={() => setOpenDateModal(false)}
+          >
+            <Text style={styles.modalButtonText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
 
         {/* Time Picker Field */}
         <View style={styles.field}>
@@ -314,9 +314,7 @@ const EditSchedule = () => {
           </ShakeableView>
           {errors.time && <Text style={styles.errorText}>{errors.time}</Text>}
         </View>
-        {/* Here you can either use a native time picker if it’s working reliably
-            or use a custom modal with RNPickerSelect dropdowns.
-            For demonstration, we’ll use a custom time picker modal below. */}
+
         <Modal visible={openTimeModal} transparent animationType="slide">
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
@@ -454,31 +452,48 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
   },
+  /* Modal Styles */
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
-    backgroundColor: '#00000066',
+    alignItems: 'center', // Center alignment for a polished look
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Subtle dimming effect
   },
   modalContent: {
-    marginHorizontal: 20,
+    width: '100%',
     padding: 20,
     backgroundColor: '#fff',
-    borderRadius: 8,
-    alignItems: 'center',
+    borderRadius: 12,
+    alignItems: 'center', // Ensures content inside is horizontally centered
+    justifyContent: 'flex-start', // Allows for proper stacking of child elements
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  calendarPicker: {
+    alignSelf: 'stretch', // Ensures the calendar spans the available width
+    marginBottom: 16, // Adds spacing below the CalendarPicker
   },
   modalHeader: {
-    fontSize: 18,
-    marginBottom: 10,
+    fontSize: 20, // Increased for better readability
+    fontWeight: 'bold',
+    color: '#333', // Neutral, modern header color
+    marginBottom: 16, // More spacing for separation
+    textAlign: 'center',
   },
   modalButton: {
-    backgroundColor: '#3b5998',
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    marginTop: 12,
+    backgroundColor: '#0069d9', // Brighter blue for better aesthetics
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: 8, // Slightly larger for a modern feel
+    marginTop: 16,
   },
   modalButtonText: {
     color: '#fff',
     fontSize: 16,
+    fontWeight: '600', // Semi-bold text for emphasis
+    textTransform: 'uppercase', // For button text consistency
   },
 });
