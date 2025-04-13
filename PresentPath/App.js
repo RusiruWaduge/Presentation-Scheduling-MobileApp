@@ -10,6 +10,7 @@ import UserSignupScreen from "./Screens/UserSignupScreen";
 import SelectionScreen from "./Screens/SelectionScreen";
 import AdminDashboard from "./Screens/AdminDashboard"; // You'll need to create this
 import UserDashboard from "./Screens/UserDashboard"; // You'll need to create this
+import OnboardingScreen from "./Screens/OnboardingScreen"; // You'll need to create this
 
 const Stack = createNativeStackNavigator();
 
@@ -22,6 +23,7 @@ function App() {
         <Stack.Screen name="User" component={UserSelection} />
         <Stack.Screen name="AdminLogin" component={AdminLoginScreen} />
         <Stack.Screen name="AdminSignup" component={AdminSignupScreen} /> */}
+        <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="UserLogin" component={UserLoginScreen} />
         <Stack.Screen name="UserSignup" component={UserSignupScreen} />
         <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
