@@ -11,6 +11,8 @@ import SelectionScreen from "./Screens/SelectionScreen";
 import AdminDashboard from "./Screens/AdminDashboard"; // You'll need to create this
 import UserDashboard from "./Screens/UserDashboard"; // You'll need to create this
 import OnboardingScreen from "./Screens/OnboardingScreen"; // You'll need to create this
+import Marks from "./Screens/UserProfileScreens/Marks";
+import MyPresentation from "./Screens/UserProfileScreens/MyPresentation"; // You'll need to create this
 
 const Stack = createNativeStackNavigator();
 
@@ -22,12 +24,14 @@ function App() {
         <Stack.Screen name="Admin" component={AdminSelection} />
         <Stack.Screen name="User" component={UserSelection} />
         <Stack.Screen name="AdminLogin" component={AdminLoginScreen} />
-        <Stack.Screen name="AdminSignup" component={AdminSignupScreen} /> */}
-        <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+        <Stack.Screen name="AdminSignup" component={AdminSignupScreen} />
+        <Stack.Screen name="Onboarding" component={OnboardingScreen} /> */}
         <Stack.Screen name="UserLogin" component={UserLoginScreen} />
         <Stack.Screen name="UserSignup" component={UserSignupScreen} />
         <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
         <Stack.Screen name="UserDashboard" component={UserDashboard} />
+        <Stack.Screen name="Marks" component={Marks} />
+        <Stack.Screen name="MyPresentation" component={MyPresentation} />
       </Stack.Navigator>
     </NavigationContainer>
   );

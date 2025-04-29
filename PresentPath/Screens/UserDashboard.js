@@ -6,12 +6,13 @@ import {
   Button,
   Alert,
   ScrollView,
+  TouchableOpacity,
 } from "react-native";
 import { account, databases } from "../Libraries/appwriteConfig";
-import { Query } from "appwrite"; // Ensure you have this import for Query
+import { Query } from "appwrite";
 
-const DATABASE_ID = "67dd8a42000b2f5184aa"; // Replace with your database ID
-const COLLECTION_ID = "67f22df100281c3981da"; // Replace with your collection ID
+const DATABASE_ID = "67dd8a42000b2f5184aa";
+const COLLECTION_ID = "67f22df100281c3981da";
 
 const UserDashboard = ({ navigation }) => {
   const [studentData, setStudentData] = useState([]);
@@ -20,52 +21,48 @@ const UserDashboard = ({ navigation }) => {
   useEffect(() => {
     const checkLoggedInUser = async () => {
       try {
-        const user = await account.get(); // Check if there's a logged-in user
-
+        const user = await account.get();
         if (!user.email) {
-          // No user is logged in, redirect to login page
           navigation.replace("UserLogin");
         } else {
-          // User is logged in, fetch student details
           fetchStudentDetails(user.email);
         }
       } catch (error) {
         console.error("Error checking session:", error);
-        navigation.replace("UserLogin"); // Redirect to login if session fetch fails
+        navigation.replace("UserLogin");
       }
     };
 
     const fetchStudentDetails = async (email) => {
       try {
-        // Query the database for student data by email
         const response = await databases.listDocuments(
           DATABASE_ID,
           COLLECTION_ID,
-          [Query.equal("email", email)] // Corrected query
+          [Query.equal("email", email)]
         );
 
         if (response.documents.length === 0) {
-          setStudentData([]); // If no documents found, set empty array
+          setStudentData([]);
         } else {
-          setStudentData(response.documents); // Set fetched documents to state
+          setStudentData(response.documents);
         }
 
-        setLoading(false); // Set loading to false after data is fetched
+        setLoading(false);
       } catch (error) {
-        setLoading(false); // Set loading to false even on error
+        setLoading(false);
         Alert.alert("Error", "Failed to fetch student details.");
         console.error("Error fetching student details:", error);
       }
     };
 
-    checkLoggedInUser(); // Check if the user is logged in when the component mounts
-  }, []); // Empty dependency array ensures the effect runs only once on mount
+    checkLoggedInUser();
+  }, []);
 
   const handleLogout = async () => {
     try {
-      await account.deleteSession("current"); // Logs out the user
+      await account.deleteSession("current");
       Alert.alert("Logout Successful", "You have been logged out.");
-      navigation.replace("UserLogin"); // Navigate to login screen
+      navigation.replace("UserLogin");
     } catch (error) {
       console.error("Logout Error:", error);
       Alert.alert("Logout Failed", error.message);
@@ -95,10 +92,33 @@ const UserDashboard = ({ navigation }) => {
               </View>
             ))
           )}
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate("Marks")}
+          >
+            <Text style={styles.buttonText}>View Marks</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate("MyPresentation")}
+          >
+            <Text style={styles.buttonText}>View Presentations</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate("UpdateProfileScreen")}
+          >
+            <Text style={styles.buttonText}>Update Profile</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.buttonText}>Logout</Text>
+          </TouchableOpacity>
         </ScrollView>
       )}
-
-      <Button title="Logout" onPress={handleLogout} color="#d9534f" />
     </View>
   );
 };
@@ -125,8 +145,8 @@ const styles = StyleSheet.create({
     padding: 20,
     marginVertical: 10,
     borderRadius: 8,
-    elevation: 5, // Gives a shadow effect on Android
-    shadowColor: "#000", // iOS shadow
+    elevation: 5,
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
@@ -140,6 +160,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#555",
     marginTop: 5,
+  },
+  button: {
+    backgroundColor: "#0275d8",
+    padding: 15,
+    borderRadius: 8,
+    marginTop: 15,
+    alignItems: "center",
+  },
+  logoutButton: {
+    backgroundColor: "#d9534f",
+    padding: 15,
+    borderRadius: 8,
+    marginTop: 25,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 
