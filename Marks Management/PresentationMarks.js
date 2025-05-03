@@ -4,8 +4,6 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { Client, Databases, ID } from 'appwrite';
 import Slider from '@react-native-community/slider';
 import { Picker } from '@react-native-picker/picker';
-import RNPickerSelect from 'react-native-picker-select';
-
 
 const client = new Client();
 client.setEndpoint('https://cloud.appwrite.io/v1').setProject('67dd8453002a601838ad');
@@ -21,7 +19,7 @@ const PresentationMarks = () => {
   const { student } = route.params;
 
   const [marks, setMarks] = useState({
-    Student_no: student.index_number,
+    Student_no: student.index_number, // Now matches the passed prop
     Content_Quality: 5,
     Presentation_Skills: 5,
     Slide_Design: 5,
@@ -31,26 +29,6 @@ const PresentationMarks = () => {
     Semester: '',
     Presentation: '',
   });
-  const handleYearChange = (value) => {
-    const numericValue = parseInt(value, 10);
-    if (value === '' || (numericValue >= 1 && numericValue <= 4)) {
-      setMarks(prevMarks => ({ ...prevMarks, Year: value }));
-      setErrors(prevErrors => ({ ...prevErrors, Year: '' }));
-    } else {
-      setErrors(prevErrors => ({ ...prevErrors, Year: 'Year must be between 1 and 4' }));
-    }
-  };
-  
-
-  const handleSemesterChange = (value) => {
-    const numericValue = parseInt(value, 10);
-    if (value === '' || (numericValue === 1 || numericValue === 2)) {
-      setMarks(prevMarks => ({ ...prevMarks, Semester: value }));
-      setErrors(prevErrors => ({ ...prevErrors, Semester: '' }));
-    } else {
-      setErrors(prevErrors => ({ ...prevErrors, Semester: 'Semester must be 1 or 2' }));
-    }
-  };
 
   const [presentations, setPresentations] = useState([]);
 

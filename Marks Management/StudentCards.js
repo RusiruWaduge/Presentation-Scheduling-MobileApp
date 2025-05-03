@@ -1,6 +1,6 @@
 // StudentCards.js
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, FlatList, Alert, TextInput } from 'react-native';
+import { View, StyleSheet, FlatList, Alert } from 'react-native';
 import { Client, Databases, Query } from 'appwrite';
 import { Card, Title, Paragraph, Button, Provider as PaperProvider, Searchbar, Text, ActivityIndicator } from 'react-native-paper';
 
@@ -9,7 +9,7 @@ client.setEndpoint('https://cloud.appwrite.io/v1').setProject('67dd8453002a60183
 
 const databases = new Databases(client);
 const databaseId = '67dd8a42000b2f5184aa';
-const collectionId = 'Students';
+const collectionId = '67f22df100281c3981da';
 
 const StudentCards = ({ navigation }) => {
   const [students, setStudents] = useState([]);
@@ -26,10 +26,10 @@ const StudentCards = ({ navigation }) => {
     if (searchQuery === '') {
       setFilteredStudents(students);
     } else {
-      const filtered = students.filter(student => 
-        student.index_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        student.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        student.last_name.toLowerCase().includes(searchQuery.toLowerCase())
+      const filtered = students.filter(student =>
+        student.indexNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        student.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        student.lastName.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setFilteredStudents(filtered);
     }
@@ -39,13 +39,15 @@ const StudentCards = ({ navigation }) => {
     try {
       setLoading(true);
       const response = await databases.listDocuments(databaseId, collectionId, [
-        Query.orderAsc('last_name')
+        Query.orderAsc('lastName')
       ]);
       const formatted = response.documents.map((doc) => ({
         id: doc.$id,
-        first_name: doc.first_name,
-        last_name: doc.last_name,
-        index_number: doc.index_number
+        firstName: doc.firstName,
+        lastName: doc.lastName,
+        indexNumber: doc.indexNumber,
+        semester: doc.semester,
+        groupID: doc.groupID,
       }));
       setStudents(formatted);
       setFilteredStudents(formatted);
@@ -64,14 +66,24 @@ const StudentCards = ({ navigation }) => {
   };
 
   const handleAddMarks = (student) => {
-    navigation.navigate('PresentationMarks', { student });
+    navigation.navigate('PresentationMarks', { 
+      student: {
+        index_number: student.indexNumber, // Changed to match PresentationMarks expectation
+        firstName: student.firstName,
+        lastName: student.lastName,
+        semester: student.semester,
+        groupID: student.groupID
+      }
+    });
   };
 
   const renderItem = ({ item }) => (
     <Card style={styles.card}>
       <Card.Content>
-        <Title style={styles.title}>{item.first_name} {item.last_name}</Title>
-        <Paragraph style={styles.subtitle}>Index No: {item.index_number}</Paragraph>
+        <Title style={styles.title}>{item.firstName} {item.lastName}</Title>
+        <Paragraph style={styles.subtitle}>Index No: {item.indexNumber}</Paragraph>
+        <Paragraph style={styles.subtitle}>Semester: {item.semester}</Paragraph>
+        <Paragraph style={styles.subtitle}>Group ID: {item.groupID}</Paragraph>
       </Card.Content>
       <Card.Actions style={styles.cardActions}>
         <Button 
@@ -144,10 +156,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#fff',
     elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
   searchInput: {
     fontSize: 14,
@@ -161,10 +169,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: '#fff',
     elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
   title: {
     fontSize: 18,
