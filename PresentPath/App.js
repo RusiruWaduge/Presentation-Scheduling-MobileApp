@@ -13,6 +13,7 @@ import UserDashboard from "./Screens/UserDashboard"; // You'll need to create th
 import OnboardingScreen from "./Screens/OnboardingScreen"; // You'll need to create this
 import Marks from "./Screens/UserProfileScreens/Marks";
 import MyPresentation from "./Screens/UserProfileScreens/MyPresentation"; // You'll need to create this
+import UpdateProfile from "./Screens/UserProfileScreens/UpdateProfile";
 
 const Stack = createNativeStackNavigator();
 
@@ -32,6 +33,7 @@ function App() {
         <Stack.Screen name="UserDashboard" component={UserDashboard} />
         <Stack.Screen name="Marks" component={Marks} />
         <Stack.Screen name="MyPresentation" component={MyPresentation} />
+        <Stack.Screen name="UpdateProfile" component={UpdateProfile} />
       </Stack.Navigator>
     </NavigationContainer>
   );

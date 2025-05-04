@@ -88,7 +88,7 @@ const UserDashboard = ({ navigation }) => {
                 <Text style={styles.cardText}>
                   Semester: {student.semester}
                 </Text>
-                <Text style={styles.cardText}>Role: {student.role}</Text>
+                
               </View>
             ))
           )}
@@ -109,7 +109,7 @@ const UserDashboard = ({ navigation }) => {
 
           <TouchableOpacity
             style={styles.button}
-            onPress={() => navigation.navigate("UpdateProfileScreen")}
+            onPress={() => navigation.navigate("UpdateProfile")}
           >
             <Text style={styles.buttonText}>Update Profile</Text>
           </TouchableOpacity>
