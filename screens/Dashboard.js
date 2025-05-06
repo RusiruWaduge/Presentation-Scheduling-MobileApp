@@ -21,7 +21,7 @@ import { ActivityIndicator } from 'react-native';
 import { Dimensions, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import CreateSchedule from './CreateSchedule';
-import Notifications from './Notifications';
+import NotificationsScreen from './Notifications';
 import Profile from './Profile';
 import EditSchedule from './EditSchedule';
 import Report from './Report';
@@ -422,6 +422,7 @@ const screen1 = () => {
             <Tab.Screen
               name="DashboardTab"
               options={{
+                headerShown: false,
                 tabBarIcon: ({ color, size }) => (
                   <MaterialIcons name="dashboard" color={color} size={size} />
                 ),
@@ -440,6 +441,7 @@ const screen1 = () => {
               name="CreateSchedule"
               component={CreateSchedule}
               options={{
+                headerShown: false,
                 tabBarIcon: ({ color, size }) => (
                   <FontAwesome name="calendar-plus-o" color={color} size={size} />
                 ),
@@ -448,6 +450,7 @@ const screen1 = () => {
             <Tab.Screen
               name="Completed"
               options={{
+                headerShown: false,
                 tabBarIcon: ({ color, size }) => (
                   <FontAwesome name="check-square" color={color} size={size} />
                 ),
@@ -461,9 +464,10 @@ const screen1 = () => {
               )}
             </Tab.Screen>
             <Tab.Screen
-              name="Notifications"
-              component={Notifications}
+              name="Reminders"
+              component={NotificationsScreen}
               options={{
+                headerShown: false,
                 tabBarIcon: ({ color, size }) => (
                   <MaterialIcons name="notifications" color={color} size={size} />
                 ),
@@ -473,6 +477,7 @@ const screen1 = () => {
               name="Profile"
               component={Profile}
               options={{
+                headerShown: false,
                 tabBarIcon: ({ color, size }) => (
                   <FontAwesome name="user-circle" color={color} size={size} />
                 ),
