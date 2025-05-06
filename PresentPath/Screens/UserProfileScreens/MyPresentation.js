@@ -1,149 +1,196 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  ActivityIndicator,
   Alert,
+  Button,
+  TextInput,
 } from "react-native";
 import { account, databases } from "../../Libraries/appwriteConfig";
 import { Query } from "appwrite";
 
 const DATABASE_ID = "67dd8a42000b2f5184aa";
 const USERS_COLLECTION_ID = "67f22df100281c3981da";
-const PRESENTATION_COLLECTION_ID = "67e012b2000fd11e41fb";
+const COMPLETED_PRESENTATION_COLLECTION_ID = "completed_presentations";
 
 const MyPresentation = ({ navigation }) => {
-  const [presentations, setPresentations] = useState([]);
+  const [studentData, setStudentData] = useState(null);
+  const [completedPresentations, setCompletedPresentations] = useState([]);
+  const [filteredPresentations, setFilteredPresentations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
-    const fetchPresentationData = async () => {
+    const fetchData = async () => {
       try {
-        const session = await account.get();
-        const email = session.email;
-
-        const userRes = await databases.listDocuments(
+        const user = await account.get();
+        const studentResponse = await databases.listDocuments(
           DATABASE_ID,
           USERS_COLLECTION_ID,
-          [Query.equal("email", email)]
+          [Query.equal("email", user.email)]
         );
 
-        if (userRes.documents.length === 0) {
-          Alert.alert("User not found", "No student data found.");
+        if (studentResponse.documents.length === 0) {
+          setStudentData(null);
+          setCompletedPresentations([]);
+          setFilteredPresentations([]);
           setLoading(false);
           return;
         }
 
-        const student = userRes.documents[0];
-        const groupID = student.groupID;
+        const student = studentResponse.documents[0];
+        setStudentData(student);
 
-        if (!groupID) {
-          Alert.alert("No group assigned", "Student group ID not found.");
-          setLoading(false);
-          return;
-        }
-
-        const presentationRes = await databases.listDocuments(
+        const completedResponse = await databases.listDocuments(
           DATABASE_ID,
-          PRESENTATION_COLLECTION_ID,
-          [Query.equal("group_id", groupID)]
+          COMPLETED_PRESENTATION_COLLECTION_ID,
+          [Query.equal("group_id", student.groupID)]
         );
 
-        setPresentations(presentationRes.documents);
+        setCompletedPresentations(completedResponse.documents);
+        setFilteredPresentations(completedResponse.documents);
       } catch (error) {
-        console.error("Error fetching presentation data:", error);
-        Alert.alert("Error", "Failed to fetch presentation data.");
+        console.error("Error fetching data:", error);
+        Alert.alert("Error", "Failed to load completed presentations.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPresentationData();
+    fetchData();
   }, []);
 
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#4f46e5" />
-        <Text style={{ marginTop: 10 }}>Loading presentations...</Text>
-      </View>
-    );
-  }
+  const handleSearch = (text) => {
+    setSearchText(text);
+    if (text.trim() === "") {
+      setFilteredPresentations(completedPresentations);
+    } else {
+      const filtered = completedPresentations.filter((presentation) =>
+        presentation.title.toLowerCase().includes(text.toLowerCase())
+      );
+      setFilteredPresentations(filtered);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await account.deleteSession("current");
+      Alert.alert("Logout Successful", "You have been logged out.");
+      navigation.replace("UserLogin");
+    } catch (error) {
+      console.error("Logout Error:", error);
+      Alert.alert("Logout Failed", error.message);
+    }
+  };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>My Presentations</Text>
+    <View style={styles.container}>
+      <Text style={styles.header}>My Completed Presentations</Text>
 
-      {presentations.length === 0 ? (
-        <Text style={styles.noData}>No presentations found for your group.</Text>
+      {loading ? (
+        <Text>Loading...</Text>
       ) : (
-        presentations.map((item, index) => (
-          <View key={index} style={styles.card}>
-            <Text style={styles.cardTitle}>Title: {item.title || "N/A"}</Text>
-            <Text style={styles.cardDetail}>Semester: {item.semester || "N/A"}</Text>
-            <Text style={styles.cardDetail}>
-              Date: {item.date ? new Date(item.date).toLocaleDateString() : "TBD"}
-            </Text>
-            <Text style={styles.cardDetail}>
-              Time: {item.time ? new Date(item.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "TBD"}
-            </Text>
-            <Text style={styles.cardDetail}>Venue: {item.venue || "TBD"}</Text>
-            <Text style={styles.cardDetail}>Status: {item.status || "Pending"}</Text>
-          </View>
-        ))
+        <ScrollView style={styles.scroll}>
+          {studentData ? (
+            <View style={styles.card}>
+              <Text style={styles.title}>
+                Name: {studentData.firstName} {studentData.lastName}
+              </Text>
+              <Text style={styles.text}>Index Number: {studentData.indexNumber}</Text>
+              <Text style={styles.text}>Group ID: {studentData.groupID}</Text>
+              <Text style={styles.text}>Semester: {studentData.semester}</Text>
+            </View>
+          ) : (
+            <Text>No student information found.</Text>
+          )}
+
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by presentation title"
+            value={searchText}
+            onChangeText={handleSearch}
+          />
+
+          {filteredPresentations.length === 0 ? (
+            <Text>No matching presentations found.</Text>
+          ) : (
+            filteredPresentations.map((presentation, index) => (
+              <View key={index} style={styles.presentationCard}>
+                <Text style={styles.presentationTitle}>{presentation.title}</Text>
+                <Text style={styles.text}>Group ID: {presentation.group_id}</Text>
+                <Text style={styles.text}>Semester: {presentation.semester}</Text>
+                <Text style={styles.text}>Date: {presentation.date}</Text>
+                <Text style={styles.text}>Time: {presentation.time}</Text>
+                <Text style={styles.text}>Venue: {presentation.venue}</Text>
+                <Text style={styles.text}>Status: {presentation.status}</Text>
+              </View>
+            ))
+          )}
+        </ScrollView>
       )}
-    </ScrollView>
+
+      <Button title="Logout" onPress={handleLogout} color="#d9534f" />
+    </View>
   );
 };
 
-export default MyPresentation;
-
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    backgroundColor: "#f9f9f9",
-    minHeight: "100%",
-  },
-  center: {
     flex: 1,
-    justifyContent: "center",
+    padding: 20,
+    backgroundColor: "#f5f5f5",
     alignItems: "center",
-    paddingTop: 50,
   },
-  title: {
-    fontSize: 24,
+  scroll: {
+    width: "100%",
+  },
+  header: {
+    fontSize: 22,
     fontWeight: "bold",
     color: "#333",
-    marginBottom: 20,
-  },
-  noData: {
-    fontSize: 16,
-    color: "#666",
-    textAlign: "center",
-    marginTop: 20,
+    marginBottom: 15,
   },
   card: {
     backgroundColor: "#fff",
+    padding: 15,
     borderRadius: 10,
-    padding: 20,
-    marginBottom: 15,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 5,
-    elevation: 3,
+    marginBottom: 20,
+    elevation: 4,
   },
-  cardTitle: {
+  title: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#4f46e5",
-    marginBottom: 5,
+    fontWeight: "600",
+    color: "#222",
   },
-  cardDetail: {
+  text: {
     fontSize: 16,
     color: "#555",
     marginTop: 4,
   },
+  searchInput: {
+    height: 40,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    marginBottom: 15,
+    backgroundColor: "#fff",
+  },
+  presentationCard: {
+    backgroundColor: "#fff",
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 15,
+    elevation: 3,
+  },
+  presentationTitle: {
+    fontSize: 17,
+    fontWeight: "600",
+    color: "#4f46e5",
+    marginBottom: 8,
+  },
 });
+
+export default MyPresentation;

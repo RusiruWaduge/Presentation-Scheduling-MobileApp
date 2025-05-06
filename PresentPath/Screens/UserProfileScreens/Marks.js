@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { account, databases } from "../../Libraries/appwriteConfig";
 import { Query } from "appwrite";
-import RNHTMLtoPDF from "react-native-html-to-pdf";
+import RNHTMLtoPDF from 'react-native-html-to-pdf';
 
 const DATABASE_ID = "67dd8a42000b2f5184aa";
 const USERS_COLLECTION_ID = "67f22df100281c3981da";
@@ -156,9 +156,9 @@ const Marks = ({ navigation }) => {
         <ScrollView style={styles.scroll}>
           {studentData ? (
             <View style={styles.card}>
-              <Text style={styles.title}>Welcome, {studentData.firstName}!</Text>
-              <Text style={styles.text}>Index Number: {studentData.indexNumber}</Text>
-              <Text style={styles.text}>Semester: {studentData.semester}</Text>
+              <Text style={styles.title}>Name :  {studentData.firstName} {studentData.lastName}</Text>
+              <Text style={styles.text}>Index Number : {studentData.indexNumber}</Text>
+              <Text style={styles.text}>Semester : {studentData.semester}</Text>
             </View>
           ) : (
             <Text>No student information found.</Text>

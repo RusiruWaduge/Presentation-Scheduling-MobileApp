@@ -8,8 +8,9 @@ import {
   Alert,
   ScrollView,
 } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 import { account, databases } from "../../Libraries/appwriteConfig";
-import { Query, ID } from "appwrite";
+import { Query } from "appwrite";
 
 const DATABASE_ID = "67dd8a42000b2f5184aa";
 const COLLECTION_ID = "67f22df100281c3981da";
@@ -23,10 +24,20 @@ const UpdateProfile = ({ navigation }) => {
     groupID: "",
     indexNumber: "",
     contactNumber: "",
-
   });
   const [documentId, setDocumentId] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const semesterOptions = [
+    "Year 1 Semester 1",
+    "Year 1 Semester 2",
+    "Year 2 Semester 1",
+    "Year 2 Semester 2",
+    "Year 3 Semester 1",
+    "Year 3 Semester 2",
+    "Year 4 Semester 1",
+    "Year 4 Semester 2",
+  ];
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -48,7 +59,6 @@ const UpdateProfile = ({ navigation }) => {
             groupID: doc.groupID,
             indexNumber: doc.indexNumber,
             contactNumber: doc.contactNumber,
-
           });
           setDocumentId(doc.$id);
         }
@@ -78,7 +88,6 @@ const UpdateProfile = ({ navigation }) => {
         groupID: profile.groupID,
         indexNumber: profile.indexNumber,
         contactNumber: profile.contactNumber,
-        
       });
 
       Alert.alert("Success", "Profile updated successfully.");
@@ -97,6 +106,7 @@ const UpdateProfile = ({ navigation }) => {
         <Text>Loading...</Text>
       ) : (
         <>
+          <Text style={styles.label}>First Name</Text>
           <TextInput
             style={styles.input}
             placeholder="First Name"
@@ -106,6 +116,7 @@ const UpdateProfile = ({ navigation }) => {
             }
           />
 
+          <Text style={styles.label}>Last Name</Text>
           <TextInput
             style={styles.input}
             placeholder="Last Name"
@@ -114,6 +125,8 @@ const UpdateProfile = ({ navigation }) => {
               setProfile((prev) => ({ ...prev, lastName: text }))
             }
           />
+
+          <Text style={styles.label}>Email</Text>
           <TextInput
             style={styles.input}
             placeholder="Email"
@@ -123,14 +136,22 @@ const UpdateProfile = ({ navigation }) => {
             }
           />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Semester"
-            value={profile.semester}
-            onChangeText={(text) =>
-              setProfile((prev) => ({ ...prev, semester: text }))
-            }
-          />
+          <Text style={styles.label}>Semester</Text>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={profile.semester}
+              onValueChange={(itemValue) =>
+                setProfile((prev) => ({ ...prev, semester: itemValue }))
+              }
+            >
+              <Picker.Item label="Select Semester" value="" />
+              {semesterOptions.map((option, index) => (
+                <Picker.Item key={index} label={option} value={option} />
+              ))}
+            </Picker>
+          </View>
+
+          <Text style={styles.label}>Group ID</Text>
           <TextInput
             style={styles.input}
             placeholder="Group ID"
@@ -139,6 +160,8 @@ const UpdateProfile = ({ navigation }) => {
               setProfile((prev) => ({ ...prev, groupID: text }))
             }
           />
+
+          <Text style={styles.label}>Index Number</Text>
           <TextInput
             style={styles.input}
             placeholder="Index Number"
@@ -147,6 +170,8 @@ const UpdateProfile = ({ navigation }) => {
               setProfile((prev) => ({ ...prev, indexNumber: text }))
             }
           />
+
+          <Text style={styles.label}>Contact Number</Text>
           <TextInput
             style={styles.input}
             placeholder="Contact Number"
@@ -186,6 +211,12 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     color: "#333",
   },
+  label: {
+    alignSelf: "flex-start",
+    fontSize: 16,
+    marginBottom: 5,
+    color: "#333",
+  },
   input: {
     width: "100%",
     backgroundColor: "#fff",
@@ -193,6 +224,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 15,
     fontSize: 16,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  pickerContainer: {
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    marginBottom: 15,
     borderWidth: 1,
     borderColor: "#ddd",
   },

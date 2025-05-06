@@ -7,9 +7,11 @@ import {
   Alert,
   ScrollView,
   TouchableOpacity,
+  Image,
 } from "react-native";
 import { account, databases } from "../Libraries/appwriteConfig";
 import { Query } from "appwrite";
+import { Ionicons } from "@expo/vector-icons"; // Make sure you have expo/vector-icons installed
 
 const DATABASE_ID = "67dd8a42000b2f5184aa";
 const COLLECTION_ID = "67f22df100281c3981da";
@@ -69,9 +71,27 @@ const UserDashboard = ({ navigation }) => {
     }
   };
 
+  const goToNotifications = () => {
+    navigation.navigate("Notifications"); // Make sure you have a Notifications screen set up
+  };
+
+  const renderProfilePhoto = (photoUrl) => {
+    return photoUrl ? (
+      <Image source={{ uri: photoUrl }} style={styles.profilePhoto} />
+    ) : (
+      <Ionicons name="person-circle-outline" size={80} color="#aaa" />
+    );
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Hello, Student!</Text>
+      {/* Top bar with notifications button */}
+      <View style={styles.topBar}>
+        <Text style={styles.text}>User Dashboard</Text>
+        <TouchableOpacity onPress={goToNotifications} style={styles.notificationButton}>
+          <Ionicons name="notifications-outline" size={28} color="#333" />
+        </TouchableOpacity>
+      </View>
 
       {loading ? (
         <Text>Loading student details...</Text>
@@ -82,16 +102,25 @@ const UserDashboard = ({ navigation }) => {
           ) : (
             studentData.map((student, index) => (
               <View key={index} style={styles.card}>
-                <Text style={styles.cardTitle}>
-                  Name: {student.firstName} {student.lastName}
-                </Text>
-                <Text style={styles.cardText}>
-                  Semester: {student.semester}
-                </Text>
-                
+                <View style={styles.profileSection}>
+                  {renderProfilePhoto(student.profilePhoto)}
+                  <View>
+                    <Text style={styles.cardTitle}>
+                      {student.firstName} {student.lastName}
+                    </Text>
+                    <Text style={styles.cardText}>Semester: {student.semester}</Text>
+                  </View>
+                </View>
               </View>
             ))
           )}
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate("UpdateProfile")}
+          >
+            <Text style={styles.buttonText}>Update Profile</Text>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.button}
@@ -104,14 +133,7 @@ const UserDashboard = ({ navigation }) => {
             style={styles.button}
             onPress={() => navigation.navigate("MyPresentation")}
           >
-            <Text style={styles.buttonText}>View Presentations</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => navigation.navigate("UpdateProfile")}
-          >
-            <Text style={styles.buttonText}>Update Profile</Text>
+            <Text style={styles.buttonText}>Completed Presentations</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
@@ -126,16 +148,23 @@ const UserDashboard = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "flex-start",
-    alignItems: "center",
     backgroundColor: "#f5f5f5",
     padding: 20,
+    paddingTop: 50,
+  },
+  topBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  notificationButton: {
+    padding: 8,
   },
   text: {
     fontSize: 22,
     fontWeight: "bold",
     color: "#333",
-    marginBottom: 20,
   },
   scrollContainer: {
     width: "100%",
@@ -150,6 +179,17 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
+  },
+  profileSection: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  profilePhoto: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginRight: 15,
+    backgroundColor: "#ddd",
   },
   cardTitle: {
     fontSize: 18,

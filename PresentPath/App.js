@@ -14,6 +14,7 @@ import OnboardingScreen from "./Screens/OnboardingScreen"; // You'll need to cre
 import Marks from "./Screens/UserProfileScreens/Marks";
 import MyPresentation from "./Screens/UserProfileScreens/MyPresentation"; // You'll need to create this
 import UpdateProfile from "./Screens/UserProfileScreens/UpdateProfile";
+import Notifications from "./Screens/Notifications"; // You'll need to create this
 
 const Stack = createNativeStackNavigator();
 
@@ -34,6 +35,7 @@ function App() {
         <Stack.Screen name="Marks" component={Marks} />
         <Stack.Screen name="MyPresentation" component={MyPresentation} />
         <Stack.Screen name="UpdateProfile" component={UpdateProfile} />
+        <Stack.Screen name="Notifications" component={Notifications} />
       </Stack.Navigator>
     </NavigationContainer>
   );
