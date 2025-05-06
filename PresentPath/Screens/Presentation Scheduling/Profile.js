@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert, StyleSheet, Image } from 'react-native';
 import { databases, account } from '../../Libraries/appwriteConfig'; // Import Appwrite databases
 import { LinearGradient } from 'expo-linear-gradient'; // Import LinearGradient for gradient background
 
