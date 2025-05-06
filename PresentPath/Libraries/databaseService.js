@@ -1,6 +1,6 @@
 // databaseservice.js
 import { Databases, ID , Query } from 'appwrite';
-import {client} from './appwriteConfig';
+import  client from './appwrite2'; 
 
 const databases = new Databases(client);
 

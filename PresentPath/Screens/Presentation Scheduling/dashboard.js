@@ -25,6 +25,8 @@ import Notifications from './Notifications';
 import Profile from './Profile';
 import EditSchedule from './EditSchedule';
 import Report from './Report';
+import { useRef } from 'react';
+
 
 // Appwrite service method for fetching schedules
 import { SaveCompletedPresentation } from '../../Libraries/databaseService';
@@ -249,31 +251,74 @@ const Screen1 = () => {
   const filteredPresentations = scheduledPresentations.filter(item =>
     item.title.toLowerCase().startsWith(searchQuery.toLowerCase())
   );
+  
+  // animated presentation item
+  const animationMap = useRef({}).current;
 
-  const renderPresentation = ({ item }) => (
-    <Animated.View style={[styles.presentationItem, { opacity: fadeAnim }]}>
-      <View style={styles.presentationInfo}>
-        <Text style={styles.presentationTitle}>{item.title}</Text>
-        <Text style={styles.presentationDetails}>Group ID: {item.group_id}</Text>
-        <Text style={styles.presentationDetails}>Semester: {item.semester}</Text>
-        <Text style={styles.presentationDetails}>
-          {formatDate(item.date)} at {formatTime(item.time)}
-        </Text>
-        <Text style={styles.presentationDetails}>Venue: {item.venue}</Text>
-      </View>
-      <View style={styles.iconContainer}>
-        <TouchableOpacity onPress={() => navigation.navigate('EditSchedule', { scheduleId: item.$id })}>
-          <Ionicons name="create-outline" size={24} color="#007bff" style={styles.icon} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => onDelete(item)}>
-          <Ionicons name="trash-outline" size={24} color="#ff4242" style={styles.icon} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => onComplete(item)}>
-          <Ionicons name="checkmark-done-outline" size={24} color="#28a745" style={styles.icon} />
-        </TouchableOpacity>
-      </View>
-    </Animated.View>
-  );
+  const animateItem = (id) => {
+    if (!animationMap[id]) {
+      animationMap[id] = {
+        opacity: new Animated.Value(0),
+        translateY: new Animated.Value(20),
+      };
+    }
+  
+    Animated.parallel([
+      Animated.timing(animationMap[id].opacity, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.timing(animationMap[id].translateY, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+  
+
+  
+  const renderPresentation = ({ item }) => {
+    animateItem(item.$id);
+  
+    const anim = animationMap[item.$id];
+  
+    return (
+      <Animated.View
+        style={[
+          styles.presentationItem,
+          {
+            opacity: anim?.opacity || 1,
+            transform: [{ translateY: anim?.translateY || 0 }],
+          },
+        ]}
+      >
+        <View style={styles.presentationInfo}>
+          <Text style={styles.presentationTitle}>{item.title}</Text>
+          <Text style={styles.presentationDetails}>Group ID: {item.group_id}</Text>
+          <Text style={styles.presentationDetails}>Semester: {item.semester}</Text>
+          <Text style={styles.presentationDetails}>
+            {formatDate(item.date)} at {formatTime(item.time)}
+          </Text>
+          <Text style={styles.presentationDetails}>Venue: {item.venue}</Text>
+        </View>
+        <View style={styles.iconContainer}>
+          <TouchableOpacity onPress={() => navigation.navigate('EditSchedule', { scheduleId: item.$id })}>
+            <Ionicons name="create-outline" size={24} color="#007bff" style={styles.icon} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => onDelete(item)}>
+            <Ionicons name="trash-outline" size={24} color="#ff4242" style={styles.icon} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => onComplete(item)}>
+            <Ionicons name="checkmark-done-outline" size={24} color="#28a745" style={styles.icon} />
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
+    );
+  };
+  
+
 
   return (
     <View style={styles.container}>
@@ -284,13 +329,14 @@ const Screen1 = () => {
         <Text style={styles.noDataText}>No scheduled presentations.</Text>
       ) : (
         <FlatList
-          data={filteredPresentations}
-          keyExtractor={(item) => item.$id}
-          renderItem={renderPresentation}
-          style={styles.list}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-          onLayout={fadeIn}
-        />
+        data={filteredPresentations}
+        keyExtractor={(item) => item.$id}
+        renderItem={renderPresentation}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        onLayout={fadeIn}
+        extraData={[searchQuery, scheduledPresentations]}  // <-- ensure re-render on data or query change
+      />
+      
       )}
 
       {/* Report Generation Button at the bottom */}

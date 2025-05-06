@@ -21,7 +21,7 @@ import { parse, isValid, format } from 'date-fns';
 import { UpdateSchedule } from '../../Libraries/databaseService';
 // For fetching the schedule details you can continue to use Appwrite’s client
 import { Databases } from 'appwrite';
-import client from '../../Libraries/databaseService';
+import client from '../../Libraries/appwrite2';
 const databases = new Databases(client);
 
 /*

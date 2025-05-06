@@ -19,7 +19,7 @@ import { parse, isValid, format } from "date-fns";
 
 // Import Appwrite SDK
 import { Databases } from 'appwrite';
-import client from '../../Libraries/appwrite'; // Centralized Appwrite config
+import client from '../../Libraries/appwrite2'; // Centralized Appwrite config
 
 const databases = new Databases(client);
 
