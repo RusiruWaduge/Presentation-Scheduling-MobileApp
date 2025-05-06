@@ -636,10 +636,10 @@ const styles = StyleSheet.create({
 
   // Typography
   header: {
-    fontSize: width * 0.07, // Responsive header font size
-    fontFamily: FONT.bold,
-    color: COLORS.dark,
-    marginBottom: SIZES.padding,
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#1f4068',
   },
   noDataText: {
     fontSize: SIZES.font,
@@ -684,10 +684,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   presentationTitle: {
-    fontSize: SIZES.font * 1.3,
-    fontFamily: FONT.bold,
-    color: COLORS.dark,
-    marginBottom: 4,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1f4068', // Dark blue title for readability
   },
   presentationDetails: {
     fontSize: SIZES.font,

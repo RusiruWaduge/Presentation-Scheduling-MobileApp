@@ -187,16 +187,18 @@ const styles = StyleSheet.create({
   },
   notificationItem: {
     flexDirection: 'row', // Horizontal layout for notifications
-    justifyContent: 'space-between', // Add space between text and button
+    justifyContent: 'flex-start', // Align text to the left
     padding: 10,
     marginBottom: 15,
     backgroundColor: '#fff', // White background for notifications
     borderRadius: 8,
-    shadowColor: '#000', 
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 6,
     shadowOpacity: 0.1,
     elevation: 2,
+    position: 'relative', // Ensure delete button is positioned correctly
+    paddingRight: 50, // Add extra space on the right to avoid collision with the delete button
   },
   notificationTitle: {
     fontSize: 18,
@@ -209,10 +211,15 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     backgroundColor: '#ff6347', // Red background for delete button
-    padding: 5,
-    borderRadius: 50,
+    paddingVertical: 8,   // Increased vertical padding to make it taller
+    paddingHorizontal: 15, // Horizontal padding for better width
+    borderRadius: 25,     // Rounded corners for a curved rectangle look
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'absolute',  // Position the button outside of the flex flow
+    top: '50%',            // Center the button vertically within the item
+    right: 10,             // Position the button 10px from the right
+    transform: [{ translateY: -15 }], // Fine-tune the vertical centering
   },
   noNotificationsText: {
     textAlign: 'center',
