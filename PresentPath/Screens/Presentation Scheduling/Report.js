@@ -7,25 +7,24 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import DatePicker from 'react-native-modern-datepicker';
+import CalendarPicker from 'react-native-calendar-picker';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
-// Utility function to pad numbers (used in time formatting)
+// Utility: pad numbers
 const pad = (num) => num.toString().padStart(2, '0');
 
-// Format a date (assumed to be in "YYYY-MM-DD") as "13 April 2025"
+// Format date nicely
 const formatFriendlyDate = (dateString) => {
   const options = { year: 'numeric', month: 'long', day: 'numeric' };
-  return new Date(dateString).toLocaleDateString(undefined, options);
+  return new Date(dateString).toLocaleDateString('en-US', options);
 };
 
-// Updated time formatting function that uses UTC hours/minutes
+// Format time using UTC
 const formatFriendlyTime = (timeString) => {
   const date = new Date(timeString);
-  // If the conversion fails, return the original string.
   if (isNaN(date)) return timeString;
-  const hours = date.getUTCHours();      // Use UTC values like in your dashboard
+  const hours = date.getUTCHours();
   const minutes = date.getUTCMinutes();
   if (hours === 0 && minutes === 0) return '12:00 AM';
   if (hours === 12 && minutes === 0) return '12:00 PM';
@@ -34,21 +33,31 @@ const formatFriendlyTime = (timeString) => {
   return `${hour12}:${pad(minutes)} ${period}`;
 };
 
-// Convert records to an HTML string with advanced (inline) CSS styling.
+// HTML generator
 const convertRecordsToHTML = (records) => {
   const style = `<style>
-    body { font-family: Arial, sans-serif; margin: 20px; background-color: #f7f7f7; }
-    h2 { text-align: center; color: #333; }
+    body { font-family: Arial; padding: 20px; background: #f7f7f7; }
+    h2 { text-align: center; }
     table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-    table, th, td { border: 1px solid #ddd; }
-    th, td { padding: 12px; text-align: left; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
     th { background-color: #4CAF50; color: white; }
     tr:nth-child(even) { background-color: #f2f2f2; }
   </style>`;
-
   const header = `<h2>Presentation Report</h2>`;
-
-  const tableHeader = `<table>
+  const tableRows = records.map(item => `
+    <tr>
+      <td>${item.title}</td>
+      <td>${item.group_id}</td>
+      <td>${item.semester}</td>
+      <td>${formatFriendlyDate(item.date)}</td>
+      <td>${formatFriendlyTime(item.time)}</td>
+      <td>${item.venue}</td>
+    </tr>`).join('');
+  return `
+    <html><head><meta charset="UTF-8">${style}</head>
+    <body>
+      ${header}
+      <table>
         <thead>
           <tr>
             <th>Title</th>
@@ -59,81 +68,39 @@ const convertRecordsToHTML = (records) => {
             <th>Venue</th>
           </tr>
         </thead>
-        <tbody>`;
-
-  const tableRows = records
-    .map((item) => {
-      const friendlyDate = formatFriendlyDate(item.date);
-      const friendlyTime = formatFriendlyTime(item.time);
-      return `<tr>
-              <td>${item.title}</td>
-              <td>${item.group_id}</td>
-              <td>${item.semester}</td>
-              <td>${friendlyDate}</td>
-              <td>${friendlyTime}</td>
-              <td>${item.venue}</td>
-            </tr>`;
-    })
-    .join('');
-
-  const tableFooter = `</tbody></table>`;
-
-  const htmlString = `
-    <html>
-      <head>
-        <meta charset="UTF-8">
-        ${style}
-      </head>
-      <body>
-        ${header}
-        ${tableHeader}
-        ${tableRows}
-        ${tableFooter}
-      </body>
-    </html>
-  `;
-  return htmlString;
+        <tbody>${tableRows}</tbody>
+      </table>
+    </body></html>`;
 };
 
 const Report = ({ route }) => {
-  // Retrieve scheduledPresentations passed via navigation.
-  const { scheduledPresentations } =
-    route.params || { scheduledPresentations: [] };
+  const { scheduledPresentations } = route.params || { scheduledPresentations: [] };
 
-  const [selectedDate, setSelectedDate] = useState('2025/04/13');
-  const [reportResult, setReportResult] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [filteredRecords, setFilteredRecords] = useState([]);
+  const [reportResult, setReportResult] = useState('');
 
-  // When a date is selected using the DatePicker
   const handleDateChange = (date) => {
     setSelectedDate(date);
   };
 
-  // Generate a report for the selected date.
   const generateReport = () => {
-    // Convert "YYYY/MM/DD" to "YYYY-MM-DD"
-    const selectedDateFormatted = selectedDate.replace(/\//g, '-');
-
-    // Filter presentations based on the selected date.
+    const selectedStr = selectedDate.toISOString().split('T')[0]; // 'YYYY-MM-DD'
     const filtered = scheduledPresentations.filter((item) =>
-      item.date.startsWith(selectedDateFormatted)
+      item.date.startsWith(selectedStr)
     );
-
     setFilteredRecords(filtered);
-    setReportResult(
-      `Total scheduled presentations on ${selectedDateFormatted}: ${filtered.length}`
-    );
+    setReportResult(`Total scheduled presentations on ${selectedStr}: ${filtered.length}`);
   };
 
-  // Download the report as an HTML file.
   const downloadReport = async () => {
     if (filteredRecords.length === 0) {
       Alert.alert('No data', 'Please generate a report first.');
       return;
     }
-    const selectedDateFormatted = selectedDate.replace(/\//g, '-');
+    const dateStr = selectedDate.toISOString().split('T')[0];
     const htmlData = convertRecordsToHTML(filteredRecords);
-    const filePath = `${FileSystem.documentDirectory}report_${selectedDateFormatted}.html`;
+    const filePath = `${FileSystem.documentDirectory}report_${dateStr}.html`;
 
     try {
       await FileSystem.writeAsStringAsync(filePath, htmlData, {
@@ -154,51 +121,36 @@ const Report = ({ route }) => {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Schedule Analyzer</Text>
       <Text style={styles.label}>Select a date:</Text>
-      <DatePicker
-        mode="calendar"
-        onSelectedChange={handleDateChange}
-        options={{
-          backgroundColor: '#ffffff',
-          textHeaderColor: '#000',
-          textDefaultColor: '#000',
-          selectedTextColor: '#fff',
-          mainColor: '#0066CC',
-          textSecondaryColor: '#000',
-          borderColor: 'rgba(0,0,0,0.1)',
-        }}
-        style={styles.datePicker}
+
+      <CalendarPicker
+        onDateChange={handleDateChange}
+        selectedStartDate={selectedDate}
+        allowRangeSelection={false}
+        todayBackgroundColor="#e6ffe6"
+        selectedDayColor="#66bb6a"
+        selectedDayTextColor="#fff"
+        width={340}
       />
+
       <TouchableOpacity style={styles.generateButton} onPress={generateReport}>
         <Text style={styles.generateButtonText}>Generate Report</Text>
       </TouchableOpacity>
-      {reportResult && <Text style={styles.resultText}>{reportResult}</Text>}
-      {filteredRecords.length > 0 && (
-        <View style={styles.recordsContainer}>
-          {filteredRecords.map((item) => (
-            <View style={styles.recordItem} key={item.$id}>
-              <Text style={styles.recordText}>Title: {item.title}</Text>
-              <Text style={styles.recordText}>
-                Group ID: {item.group_id}
-              </Text>
-              <Text style={styles.recordText}>
-                Semester: {item.semester}
-              </Text>
-              <Text style={styles.recordText}>
-                Date: {formatFriendlyDate(item.date)}
-              </Text>
-              <Text style={styles.recordText}>
-                Time: {formatFriendlyTime(item.time)}
-              </Text>
-              <Text style={styles.recordText}>Venue: {item.venue}</Text>
-            </View>
-          ))}
+
+      {reportResult ? <Text style={styles.resultText}>{reportResult}</Text> : null}
+
+      {filteredRecords.map((item) => (
+        <View style={styles.recordItem} key={item.$id}>
+          <Text style={styles.recordText}>Title: {item.title}</Text>
+          <Text style={styles.recordText}>Group ID: {item.group_id}</Text>
+          <Text style={styles.recordText}>Semester: {item.semester}</Text>
+          <Text style={styles.recordText}>Date: {formatFriendlyDate(item.date)}</Text>
+          <Text style={styles.recordText}>Time: {formatFriendlyTime(item.time)}</Text>
+          <Text style={styles.recordText}>Venue: {item.venue}</Text>
         </View>
-      )}
+      ))}
+
       {filteredRecords.length > 0 && (
-        <TouchableOpacity
-          style={styles.downloadButton}
-          onPress={downloadReport}
-        >
+        <TouchableOpacity style={styles.downloadButton} onPress={downloadReport}>
           <Text style={styles.downloadButtonText}>Download Report</Text>
         </TouchableOpacity>
       )}
@@ -217,18 +169,12 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: 'bold',
     color: '#333',
-    textAlign: 'center',
     marginBottom: 20,
   },
   label: {
     fontSize: 18,
-    color: '#555',
     marginBottom: 10,
-    textAlign: 'center',
-  },
-  datePicker: {
-    alignSelf: 'center',
-    marginBottom: 30,
+    color: '#555',
   },
   generateButton: {
     backgroundColor: '#28a745',
@@ -236,11 +182,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 8,
     width: '80%',
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
+    marginTop: 20,
   },
   generateButtonText: {
     color: '#fff',
@@ -248,31 +190,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   resultText: {
-    fontSize: 20,
+    fontSize: 18,
     color: '#333',
-    textAlign: 'center',
-    marginVertical: 20,
-  },
-  recordsContainer: {
-    width: '100%',
-    marginBottom: 20,
+    marginVertical: 15,
   },
   recordItem: {
     backgroundColor: '#fff',
     borderRadius: 8,
     padding: 15,
-    marginVertical: 8,
-    borderWidth: 1,
+    marginBottom: 10,
     borderColor: '#ddd',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    width: '100%',
   },
   recordText: {
     fontSize: 16,
     color: '#444',
-    marginBottom: 4,
   },
   downloadButton: {
     backgroundColor: '#007bff',
@@ -280,11 +213,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 8,
     width: '80%',
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
+    marginTop: 20,
   },
   downloadButtonText: {
     color: '#fff',
