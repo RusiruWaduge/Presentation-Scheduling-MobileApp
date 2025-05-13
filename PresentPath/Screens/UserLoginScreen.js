@@ -8,10 +8,12 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from "react-native";
 import { account, databases } from "../Libraries/appwriteConfig";
 import { Query } from "appwrite";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 
 const DATABASE_ID = "67dd8a42000b2f5184aa";
 const COLLECTION_ID = "67f22df100281c3981da";
@@ -23,25 +25,16 @@ const UserLoginScreen = ({ navigation }) => {
 
   const handleLogin = async () => {
     try {
-      console.log("Trying to login...");
-  
       await account.createEmailPasswordSession(email, password);
-      console.log("Session created!");
-  
       const user = await account.get();
-      console.log("User fetched: ", user);
-  
       const response = await databases.listDocuments(
         DATABASE_ID,
         COLLECTION_ID,
         [Query.equal("email", user.email)]
       );
-      console.log("Response: ", response);
-  
+
       if (response.documents.length > 0) {
         const role = response.documents[0].role;
-        console.log("User Role: ", role);
-  
         if (role === "Examiner") {
           Alert.alert("Login Successful", "Welcome, Examiner!");
           navigation.replace("MainDashboard");
@@ -57,58 +50,75 @@ const UserLoginScreen = ({ navigation }) => {
       Alert.alert("Login Failed", error.message);
     }
   };
-  
 
   return (
-    <KeyboardAvoidingView
+    <LinearGradient
+      colors={["#f3f5bc", "#dbeafe", "#bfdbfe"]}
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <View style={styles.card}>
-        <Text style={styles.title}>Welcome Back 👋</Text>
-        <Text style={styles.subtitle}>Login to your account</Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.keyboardContainer}
+      >
+        <View style={styles.card}>
+          <Image
+            source={require("../assets/logo.png")}
+            style={styles.logo}
+          />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email Address"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
+          <Text style={styles.title}>Welcome Back</Text>
+          <Text style={styles.subtitle}>Login to your account</Text>
 
-        <View style={styles.passwordContainer}>
           <TextInput
             style={styles.input}
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={secureText}
+            placeholder="Email Address"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
           />
-          <TouchableOpacity
-            style={styles.eyeIcon}
-            onPress={() => setSecureText(!secureText)}
-          >
-            <Ionicons
-              name={secureText ? "eye-off" : "eye"}
-              size={20}
-              color="#999"
+
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={secureText}
             />
+            <TouchableOpacity
+              style={styles.eyeIcon}
+              onPress={() => setSecureText(!secureText)}
+            >
+              <Ionicons
+                name={secureText ? "eye-off" : "eye"}
+                size={20}
+                color="#777"
+              />
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity style={styles.button} onPress={handleLogin}>
+            <LinearGradient
+              colors={["#3b82f6", "#2563eb"]}
+              style={styles.buttonGradient}
+            >
+              <Text style={styles.buttonText}>Login</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.link}
+            onPress={() => navigation.navigate("UserSignup")}
+          >
+            <Text style={styles.linkText}>
+              Don’t have an account?{" "}
+              <Text style={styles.linkHighlight}>Sign up</Text>
+            </Text>
           </TouchableOpacity>
         </View>
-
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Login</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.link}
-          onPress={() => navigation.navigate("UserSignup")}
-        >
-          <Text style={styles.linkText}>Don't have an account? Sign up</Text>
-        </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 };
 
@@ -117,40 +127,47 @@ export default UserLoginScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f7f8fa",
+  },
+  keyboardContainer: {
+    flex: 1,
     justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
   },
   card: {
-    backgroundColor: "#fff",
-    padding: 25,
-    borderRadius: 20,
-    width: "100%",
+    backgroundColor: "#ffffff",
+    padding: 30,
+    borderRadius: 28,
     shadowColor: "#000",
     shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 12,
+    elevation: 8,
+    alignItems: "center",
+  },
+  logo: {
+    width: 80,
+    height: 80,
+    marginBottom: 16,
+    borderRadius: 20,
   },
   title: {
     fontSize: 26,
-    fontWeight: "600",
-    marginBottom: 5,
-    color: "#1e1e1e",
+    fontWeight: "700",
+    color: "#1f2937",
   },
   subtitle: {
     fontSize: 14,
-    color: "#666",
-    marginBottom: 20,
+    color: "#6b7280",
+    marginBottom: 24,
   },
   input: {
-    backgroundColor: "#f0f0f0",
-    padding: 12,
-    borderRadius: 10,
+    backgroundColor: "#f9fafb",
+    padding: 14,
+    borderRadius: 12,
     fontSize: 16,
-    marginBottom: 15,
     width: "100%",
+    marginBottom: 16,
+    color: "#111827",
   },
   passwordContainer: {
     position: "relative",
@@ -159,14 +176,18 @@ const styles = StyleSheet.create({
   eyeIcon: {
     position: "absolute",
     right: 15,
-    top: 14,
+    top: 18,
   },
   button: {
-    backgroundColor: "#4f46e5",
-    paddingVertical: 14,
-    borderRadius: 10,
+    width: "100%",
+    borderRadius: 12,
+    overflow: "hidden",
     marginTop: 10,
+  },
+  buttonGradient: {
+    paddingVertical: 14,
     alignItems: "center",
+    borderRadius: 12,
   },
   buttonText: {
     color: "#fff",
@@ -175,10 +196,13 @@ const styles = StyleSheet.create({
   },
   link: {
     marginTop: 20,
-    alignItems: "center",
   },
   linkText: {
-    color: "#4f46e5",
     fontSize: 14,
+    color: "#6b7280",
+  },
+  linkHighlight: {
+    color: "#2563eb",
+    fontWeight: "600",
   },
 });

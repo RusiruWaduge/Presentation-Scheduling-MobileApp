@@ -20,7 +20,9 @@
     "@react-navigation/stack": "^7.2.10",
     "appwrite": "^17.0.1",
     "expo": "^53.0.7",
+    "expo-dev-client": "~5.1.8",
     "expo-linear-gradient": "^14.1.4",
+    "expo-notifications": "~0.31.1",
     "expo-print": "~14.1.4",
     "expo-secure-store": "~14.2.3",
     "expo-sharing": "~13.1.5",
@@ -41,12 +43,11 @@
     "react-native-reanimated": "^3.17.5",
     "react-native-safe-area-context": "^5.4.0",
     "react-native-screens": "^4.10.0",
+    "react-native-swiper": "^1.6.0",
     "react-native-web": "^0.20.0",
     "react-navigation": "^5.0.0",
     "use-latest-callback": "^0.2.3",
-    "yup": "^1.6.1",
-    "expo-notifications": "~0.31.1",
-    "expo-dev-client": "~5.1.8"
+    "yup": "^1.6.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
