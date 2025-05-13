@@ -5,17 +5,18 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
-  Button,
   TextInput,
+  TouchableOpacity,
 } from "react-native";
 import { account, databases } from "../../Libraries/appwriteConfig";
 import { Query } from "appwrite";
+import { Ionicons } from "@expo/vector-icons"; // For back button
 
 const DATABASE_ID = "67dd8a42000b2f5184aa";
 const USERS_COLLECTION_ID = "67f22df100281c3981da";
-const COMPLETED_PRESENTATION_COLLECTION_ID = "completed_presentations";
+const COMPLETED_PRESENTATION_COLLECTION_ID = "PresentationSchedules";
 
-const MyPresentation = ({ navigation }) => {
+const UpcomingPresentation = ({ navigation }) => {
   const [studentData, setStudentData] = useState(null);
   const [completedPresentations, setCompletedPresentations] = useState([]);
   const [filteredPresentations, setFilteredPresentations] = useState([]);
@@ -74,20 +75,14 @@ const MyPresentation = ({ navigation }) => {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await account.deleteSession("current");
-      Alert.alert("Logout Successful", "You have been logged out.");
-      navigation.replace("UserLogin");
-    } catch (error) {
-      console.error("Logout Error:", error);
-      Alert.alert("Logout Failed", error.message);
-    }
-  };
-
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>My Completed Presentations</Text>
+      <View style={styles.headerRow}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#003366" />
+        </TouchableOpacity>
+        <Text style={styles.header}>My Upcoming Presentations</Text>
+      </View>
 
       {loading ? (
         <Text>Loading...</Text>
@@ -130,8 +125,6 @@ const MyPresentation = ({ navigation }) => {
           )}
         </ScrollView>
       )}
-
-      <Button title="Logout" onPress={handleLogout} color="#d9534f" />
     </View>
   );
 };
@@ -143,14 +136,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
     alignItems: "center",
   },
-  scroll: {
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
     width: "100%",
+    marginBottom: 15,
+  },
+  backButton: {
+    marginRight: 10,
   },
   header: {
     fontSize: 22,
     fontWeight: "bold",
-    color: "#333",
-    marginBottom: 15,
+    color: "#003366", // Dark blue for the header
+  },
+  scroll: {
+    width: "100%",
   },
   card: {
     backgroundColor: "#fff",
@@ -162,7 +163,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#222",
+    color: "#003366", // Dark blue for title
   },
   text: {
     fontSize: 16,
@@ -171,7 +172,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     height: 40,
-    borderColor: "#ccc",
+    borderColor: "#2196F3", // Light blue border
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 10,
@@ -188,9 +189,9 @@ const styles = StyleSheet.create({
   presentationTitle: {
     fontSize: 17,
     fontWeight: "600",
-    color: "#4f46e5",
+    color: "#2196F3", // Light blue for the presentation title
     marginBottom: 8,
   },
 });
 
-export default MyPresentation;
+export default UpcomingPresentation;

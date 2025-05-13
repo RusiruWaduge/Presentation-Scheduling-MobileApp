@@ -11,6 +11,7 @@ import {
 import { Picker } from "@react-native-picker/picker";
 import { account, databases } from "../../Libraries/appwriteConfig";
 import { Query } from "appwrite";
+import { Ionicons } from "@expo/vector-icons"; // For back button
 
 const DATABASE_ID = "67dd8a42000b2f5184aa";
 const COLLECTION_ID = "67f22df100281c3981da";
@@ -100,7 +101,12 @@ const UpdateProfile = ({ navigation }) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.header}>Update Profile</Text>
+      <View style={styles.headerRow}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#003366" />
+        </TouchableOpacity>
+        <Text style={styles.header}>Update Profile</Text>
+      </View>
 
       {loading ? (
         <Text>Loading...</Text>
@@ -205,17 +211,26 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#f5f5f5",
   },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    marginBottom: 30,
+  },
+  backButton: {
+    marginRight: 10,
+  },
   header: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 30,
-    color: "#333",
+    color: "#003366", // Dark blue for header
   },
   label: {
     alignSelf: "flex-start",
     fontSize: 16,
     marginBottom: 5,
-    color: "#333",
+    color: "#003366", // Dark blue for labels
   },
   input: {
     width: "100%",
@@ -236,7 +251,7 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
   },
   button: {
-    backgroundColor: "#0275d8",
+    backgroundColor: "#2196F3", // Light blue for Save button
     padding: 15,
     borderRadius: 8,
     width: "100%",
@@ -244,7 +259,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   cancelButton: {
-    backgroundColor: "#d9534f",
+    backgroundColor: "#d9534f", // Red for Cancel button
     padding: 15,
     borderRadius: 8,
     width: "100%",
