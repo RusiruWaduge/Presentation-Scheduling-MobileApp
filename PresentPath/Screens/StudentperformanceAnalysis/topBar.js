@@ -5,16 +5,14 @@ import {
   StyleSheet,
   Image,
   ActivityIndicator,
-  TouchableOpacity,
 } from "react-native";
 import { getCurrentUser } from "../../Libraries/appwrite";
-import Ionicons from "react-native-vector-icons/Ionicons";
 
-const TopBar = ({ title }) => {
+const TopBar = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState("light"); // Manage theme state locally
-  
+
   useEffect(() => {
     const fetchUser = async () => {
       const currentUser = await getCurrentUser();
@@ -24,11 +22,6 @@ const TopBar = ({ title }) => {
     fetchUser();
   }, []);
 
-  // Toggle theme function
-  const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
-  };
-
   return (
     <View
       style={[
@@ -36,14 +29,24 @@ const TopBar = ({ title }) => {
         theme === "dark" ? styles.darkContainer : styles.lightContainer,
       ]}
     >
-      <Text
-        style={[
-          styles.title,
-          theme === "dark" ? styles.darkText : styles.lightText,
-        ]}
-      >
-        {title}
-      </Text>
+      <View style={styles.leftSection}>
+        <Text
+          style={[
+            styles.welcomeText,
+            theme === "dark" ? styles.darkText : styles.lightText,
+          ]}
+        >
+          Welcome to your
+        </Text>
+        <Text
+          style={[
+            styles.title,
+            theme === "dark" ? styles.darkText : styles.lightText,
+          ]}
+        >
+          Performance Analysis
+        </Text>
+      </View>
 
       <View style={styles.rightSection}>
         {loading ? (
@@ -71,15 +74,6 @@ const TopBar = ({ title }) => {
             />
           </View>
         ) : null}
-
-        {/* Theme Toggle Button */}
-        <TouchableOpacity onPress={toggleTheme} style={styles.themeToggle}>
-          <Ionicons
-            name={theme === "dark" ? "sunny-outline" : "moon-outline"}
-            size={24}
-            color={theme === "dark" ? "#FFD700" : "#fff"}
-          />
-        </TouchableOpacity>
       </View>
     </View>
   );
@@ -100,14 +94,21 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 5,
   },
+  leftSection: {
+    flexDirection: "column",
+  },
   lightContainer: {
     backgroundColor: "#007AFF",
   },
   darkContainer: {
     backgroundColor: "#1E1E1E",
   },
+  welcomeText: {
+    fontSize: 14,
+    fontWeight: "500",
+  },
   title: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
   },
   lightText: {
@@ -135,11 +136,6 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     borderWidth: 2,
-  },
-  themeToggle: {
-    padding: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    borderRadius: 8,
   },
 });
 

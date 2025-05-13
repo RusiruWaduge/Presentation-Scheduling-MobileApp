@@ -1,29 +1,19 @@
-const API_KEY = 'AIzaSyAit5ym9k9_D6SsgE3RBhkEX6QYxs5gxxU'; // Replace with a valid key
+const API_KEY = 'AIzaSyAbZUg96lhm5q1Mmdw4FrDW3Iw_XE34e7Q'; // Replace with a valid Google Generative AI API key
 
-export const generateFeedback = async (marks, isOverall = false) => {
-  const prompt = isOverall
-    ? `
-      Provide a **detailed overall performance feedback** based on the following student's marks:
-      
-      ${marks.map(mark =>
-        `- ${mark.subject}: ${mark.score}/100 (${mark.status})`
-      ).join('\n')}
+export const generateGuidelines = async (marks) => {
+  const prompt = `
+    Based on the following student performance marks:
 
-      Include strengths, weaknesses, and actionable suggestions for improvement.
-    `
-    : `
-      Provide a **short and direct feedback** based on the following student's marks:
-      
-      ${marks.map(mark =>
-        `- ${mark.subject}: ${mark.score}/100 (${mark.status})`
-      ).join('\n')}
+    ${marks
+      .map((mark) => `- ${mark.subject}: ${mark.score}/100 (${mark.status})`)
+      .join('\n')}
 
-      Keep the feedback short and motivational.
-    `;
+    Provide a list of actionable, specific, and motivational guidelines to help the student improve their future performance. Return only the guidelines in bullet point form (using "-"), ensuring each guideline is clear, practical, and encouraging. Avoid any introductory or summary text outside the bullet points.
+  `;
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
       {
         method: 'POST',
         headers: {
@@ -44,13 +34,12 @@ export const generateFeedback = async (marks, isOverall = false) => {
     }
 
     const data = await response.json();
-    const feedback =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text || 'No feedback generated.';
+    const guidelines =
+      data?.candidates?.[0]?.content?.parts?.[0]?.text || '- No guidelines generated.';
 
-    return feedback;
+    return guidelines;
   } catch (error) {
-    console.error('Error generating feedback:', error);
-    return 'Failed to generate feedback.';
+    console.error('Error generating guidelines:', error);
+    return '- Failed to generate guidelines. Please try again later.';
   }
 };
-
