@@ -41,7 +41,24 @@ const OnboardingScreen = () => {
           style={styles.image}
         />
         <Animated.View style={[styles.textContainer, { opacity: fadeAnim }, ]}>
-          <Text style={styles.title}>Welcome to PresentPath</Text>
+        <View style={{ width: '100%', paddingHorizontal: 20 }}>
+  <Text 
+    numberOfLines={1}
+    style={{ 
+      fontSize: 25, 
+      fontWeight: '600', 
+      fontStyle: 'bold', 
+      fontFamily: 'sans-serif', 
+      color: 'white', 
+      textAlign: 'center', 
+      marginBottom: 20 
+    }}
+  >
+    "Present better with PresentPath"
+  </Text>
+</View>
+
+
           <Text style={styles.text}>
             Streamline scheduling and assessments with a platform built for students and examiners.
           </Text>
@@ -71,7 +88,8 @@ const OnboardingScreen = () => {
         <Animated.View style={[styles.textContainer, { opacity: fadeAnim }]}>
           <Text style={styles.title}>For All Users</Text>
           <Text style={styles.text}>
-            Students upload materials and view schedules; examiners assign marks with ease.
+            Students upload materials and view schedules; examiners assign marks with ease. 
+            Users can get AI generated feedbacks.
           </Text>
         </Animated.View>
       </View>
