@@ -2,16 +2,10 @@
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
-
-
-
 import UserLoginScreen from "./Screens/UserLoginScreen";
-
 import UserSignupScreen from "./Screens/UserSignupScreen";
-
 import MainDashboardScreen from "./Screens/MainDashboard";
 import UserMenu from "./Screens/Menubar/userMenu";
-
 import PresentationDashboard from "./Screens/Presentation Scheduling/dashboard";
 import MarksDashboard from "./Screens/Marks Management/Dashboard";
 import PresentationMarks from './Screens/Marks Management/PresentationMarks';
@@ -35,7 +29,7 @@ const Stack = createStackNavigator();
 function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="OnboardingScreen" screenOptions={{ headerShown: false }}>
+      <Stack.Navigator initialRouteName="UserHome" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="OnboardingScreen" component={OnboardingScreen} />
         <Stack.Screen name="UserLogin" component={UserLoginScreen} />
         <Stack.Screen name="UserSignup" component={UserSignupScreen} />
