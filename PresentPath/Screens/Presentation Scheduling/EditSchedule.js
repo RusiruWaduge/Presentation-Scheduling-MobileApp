@@ -277,18 +277,28 @@ const EditSchedule = () => {
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          <CalendarPicker
-            onDateChange={(selectedDate) => {
-              const formattedDate = format(new Date(selectedDate), 'yyyy-MM-dd'); // Store as ISO format
-              setForm({ ...form, date: formattedDate });
-              setOpenDateModal(false); // Close modal after selection
-            }}
-            selectedStartDate={form.date ? new Date(form.date) : undefined}
-            textStyle={{ color: '#007bff' }}
-            todayBackgroundColor="#e6ffe6"
-            selectedDayColor="#007bff"
-            selectedDayTextColor="#ffffff"
-          />
+<CalendarPicker
+  onDateChange={(selectedDate) => {
+    const today = new Date(); // Get today's date
+    const selectedDay = new Date(selectedDate); // Get the selected date
+
+    // Compare selected date with today and restrict past dates, but allow today
+    if (selectedDay < today.setHours(0, 0, 0, 0)) {
+      Alert.alert("Invalid date", "You cannot select a past date.");
+    } else {
+      const formattedDate = format(new Date(selectedDate), 'yyyy-MM-dd'); // Store as ISO format
+      setForm({ ...form, date: formattedDate });
+      setOpenDateModal(false); // Close modal after selection
+    }
+  }}
+  selectedStartDate={form.date ? new Date(form.date) : undefined}
+  textStyle={{ color: '#007bff' }}
+  todayBackgroundColor="#e6ffe6"
+  selectedDayColor="#007bff"
+  selectedDayTextColor="#ffffff"
+  minDate={new Date()} // Disable past dates, but allow today
+/>
+
           <TouchableOpacity
             style={styles.modalButton}
             onPress={() => setOpenDateModal(false)}
