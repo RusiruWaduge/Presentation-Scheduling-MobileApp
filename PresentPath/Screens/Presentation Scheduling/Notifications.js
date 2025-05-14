@@ -15,22 +15,7 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString(undefined, options);
 };
 
-const formatTime = (timeString) => {
-  const date = new Date(timeString);
-  if (isNaN(date)) return timeString;
-  
-  const hours = date.getUTCHours();
-  const minutes = date.getUTCMinutes();
-  
-  if (hours === 0 && minutes === 0) return `12:00 AM`;  
-  if (hours === 12 && minutes === 0) return `12:00 PM`;
-  
-  const period = hours < 12 ? 'AM' : 'PM';
-  const hour12 = hours % 12 === 0 ? 12 : hours % 12;
-  
-  return `${hour12}:${pad(minutes)} ${period}`;
-};
-
+// NotificationsScreen component
 const NotificationsScreen = () => {
   const [notifications, setNotifications] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
@@ -43,7 +28,6 @@ const NotificationsScreen = () => {
       if (status === 'granted') {
         const token = await Notifications.getExpoPushTokenAsync();
         console.log('Push notification token:', token.data);
-        // Here you can store the token in your database if needed.
       }
     };
 
@@ -78,7 +62,6 @@ const NotificationsScreen = () => {
     const fetchSchedules = async () => {
       try {
         const schedules = await GetSchedules();
-        // Filter schedules with presentations due in the next 24 hours
         const upcomingNotifications = schedules.filter((schedule) => {
           const currentDate = new Date();
           const presentationDate = new Date(schedule.date);
@@ -88,18 +71,20 @@ const NotificationsScreen = () => {
 
         // Map the upcoming schedules to notification objects
         const reminderNotifications = upcomingNotifications.map((schedule) => {
-          // If both date and a separate time are provided, combine them;
-          // otherwise, use the full date stored in schedule.date.
           const dateTimeString = schedule.time 
             ? `${schedule.date}T${schedule.time}` 
             : schedule.date;
-          const formattedTime = formatTime(dateTimeString);
 
           return {
             request: {
               content: {
                 title: `Reminder: Presentation for Group ${schedule.group_id}`,
-                body: `The presentation for group ${schedule.group_id} is due tomorrow at ${formattedTime}`,
+                body: (
+                  <>
+                    The presentation for group {schedule.group_id} is due{" "}
+                    <Text style={styles.redText}>tomorrow</Text>.
+                  </>
+                ),
                 data: {
                   time: schedule.date, // Storing the date for the reminder
                 },
@@ -251,6 +236,9 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: '#007bff',
     borderRadius: 5,
+  },
+  redText: {
+    color: 'red',
   },
 });
 
