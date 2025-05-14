@@ -2,25 +2,22 @@
 import { Databases, ID , Query } from 'appwrite';
 import  client from './appwrite2'; 
 import * as Notifications from 'expo-notifications';  // Import expo-notifications
+import moment from 'moment-timezone'; // Use moment-timezone for handling time zones
+
 
 const databases = new Databases(client);
 
-// Function to send push notification using Expo
-const sendPushNotification = async (expoPushToken, title, message) => {
-  try {
-    const messageBody = {
-      to: expoPushToken,  // Expo push token of the examiner
-      sound: 'default',
-      title: title,
-      body: message,
-      data: { someData: 'value' },
-    };
 
-    const response = await Notifications.sendPushNotificationAsync(messageBody);
-    console.log('Push notification sent:', response);
-  } catch (error) {
-    console.error('Error sending push notification:', error);
-  }
+
+const pad = (num) => num.toString().padStart(2, '0');
+
+// Helper function to format time (without unwanted 0s)
+const formatTime = (time) => {
+  const hours = time.getHours();
+  const minutes = time.getMinutes();
+  const period = hours < 12 ? 'AM' : 'PM';
+  const hour12 = hours % 12 === 0 ? 12 : hours % 12;
+  return `${hour12}:${pad(minutes)} ${period}`;
 };
 
 // Function to create a schedule and send a notification to the examiner
@@ -28,63 +25,67 @@ export const CreateSchedule = async (data, examinerExpoPushToken) => {
   const databaseId = '67dd8a42000b2f5184aa';  // Ensure this databaseId is correct
   const collectionId = 'PresentationSchedules';  // Ensure this collectionId is correct
 
-  console.log("Database ID:", JSON.stringify(databaseId));
-  console.log("Collection ID:", JSON.stringify(collectionId));
+  console.log("Database ID:", databaseId);
+  console.log("Collection ID:", collectionId);
 
   try {
+    // Instead of manually combining and parsing the date/time,
+    // use moment.tz to parse according to Asia/Colombo.
+    const presentationMoment = moment.tz(
+      `${data.date} ${data.time}`, // assuming data.date is in "YYYY-MM-DD" and data.time is in "HH:mm" format
+      'YYYY-MM-DD HH:mm',
+      'Asia/Colombo'
+    );
+
+    if (!presentationMoment.isValid()) {
+      throw new Error('Invalid combined date and time');
+    }
+
+    // Format the date/time as "YYYY-MM-DDTHH:mm:ss" (no milliseconds or timezone offset)
+    const formattedDateTime = presentationMoment.format('YYYY-MM-DDTHH:mm:ss');
+
+    // Create the schedule document (ensure databases and ID are imported/configured properly)
     const response = await databases.createDocument(
       databaseId.trim(),
       collectionId.trim(),
       ID.unique(),
-      data
+      { ...data, date: formattedDateTime }
     );
 
     // Store the Expo Push Token in the schedule document
     await databases.updateDocument(
       databaseId.trim(),
       collectionId.trim(),
-      response.$id,  // Use the response ID from the created document
+      response.$id,
       { examinerExpoPushToken: examinerExpoPushToken }
     );
 
     console.log('Schedule created successfully:', response);
 
-    // Calculate 24 hours before the presentation date
-    const presentationDate = new Date(data.date);
-    const reminderTime = new Date(presentationDate.getTime() - 24 * 60 * 60 * 1000);  // 24 hours before
+    // Calculate 24 hours before the presentation date.
+    // presentationMoment is already in Asia/Colombo time.
+    const reminderMoment = presentationMoment.clone().subtract(24, 'hours');
+    const reminderTime = reminderMoment.toDate();
 
-    console.log("Reminder will be sent at:", reminderTime);
+    console.log("Reminder will be sent at:", reminderTime.toLocaleString());
+
+    // Format reminder time as "3:00 PM" (for example)
+    const formattedTime = formatTime(reminderTime);
 
     // Schedule a reminder notification for the examiner
-    const notificationId = await scheduleReminderNotification(reminderTime, examinerExpoPushToken, "Reminder: Presentation Evaluation", `You have a scheduled presentation for group "${data.group_id}" tomorrow at ${data.time}`);
+    const notificationId = await scheduleReminderNotification(
+      reminderTime,
+      examinerExpoPushToken,
+      "Reminder: Presentation Evaluation",
+      `You have a scheduled presentation for group "${data.group_id}" tomorrow at ${formattedTime}`
+    );
+
     console.log('Reminder notification scheduled successfully:', notificationId);
 
     return response;
   } catch (error) {
     console.error('Error creating schedule:', error);
     throw error;
-  }
-};
-
-// Function to schedule a reminder notification using expo-notifications
-const scheduleReminderNotification = async (reminderTime, examinerExpoPushToken, title, message) => {
-  try {
-    // Schedule the notification using Expo
-    const notificationId = await Notifications.scheduleNotificationAsync({
-      content: {
-        to: examinerExpoPushToken,
-        title: title,
-        body: message,
-      },
-      trigger: {
-        seconds: (reminderTime - new Date()) / 1000,  // Calculate the seconds until the reminder
-      },
-    });
-
-    console.log('Reminder notification scheduled successfully:', notificationId);
-    return notificationId;
-  } catch (error) {
-    console.error('Error scheduling reminder notification:', error);
   }
 };
 
