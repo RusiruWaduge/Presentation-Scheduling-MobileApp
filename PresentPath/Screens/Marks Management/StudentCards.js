@@ -1,29 +1,31 @@
 // StudentCards.js
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, FlatList, Alert, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, FlatList, Alert } from 'react-native';
 import { Client, Databases, Query } from 'appwrite';
-import { useNavigation } from '@react-navigation/native';
-import { Card, Title, Paragraph, Button, Provider as PaperProvider, Searchbar, Text, ActivityIndicator } from 'react-native-paper';
-import { Ionicons } from '@expo/vector-icons'; // For back icon (or use any other icon lib you use)
+import { 
+  Card, 
+  Title, 
+  Paragraph, 
+  Button, 
+  Provider as PaperProvider, 
+  Searchbar, 
+  Text, 
+  ActivityIndicator 
+} from 'react-native-paper';
 
+// Appwrite client setup
 const client = new Client();
-client
-  .setEndpoint('https://cloud.appwrite.io/v1')
-  .setProject('67dd8453002a601838ad');
-
+client.setEndpoint('https://cloud.appwrite.io/v1').setProject('67dd8453002a601838ad');
 const databases = new Databases(client);
 const databaseId = '67dd8a42000b2f5184aa';
 const collectionId = '67f22df100281c3981da';
 
-const StudentCards = () => {
-
+const StudentCards = ({ navigation }) => {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const navigation = useNavigation();
-
 
   useEffect(() => {
     fetchStudents();
@@ -34,9 +36,9 @@ const StudentCards = () => {
       setFilteredStudents(students);
     } else {
       const filtered = students.filter(student =>
-        student.indexNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        student.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        student.lastName.toLowerCase().includes(searchQuery.toLowerCase())
+        (student.indexNumber && student.indexNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (student.firstName && student.firstName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (student.lastName && student.lastName.toLowerCase().includes(searchQuery.toLowerCase()))
       );
       setFilteredStudents(filtered);
     }
@@ -48,14 +50,16 @@ const StudentCards = () => {
       const response = await databases.listDocuments(databaseId, collectionId, [
         Query.orderAsc('lastName')
       ]);
-      const formatted = response.documents.map(doc => ({
+
+      const formatted = response.documents.map((doc) => ({
         id: doc.$id,
-        firstName: doc.firstName,
-        lastName: doc.lastName,
-        indexNumber: doc.indexNumber,
-        semester: doc.semester,
-        groupID: doc.groupID,
+        firstName: doc.firstName || '',
+        lastName: doc.lastName || '',
+        indexNumber: doc.indexNumber || '',
+        semester: doc.semester || '',
+        groupID: doc.groupID || '',
       }));
+
       setStudents(formatted);
       setFilteredStudents(formatted);
     } catch (error) {
@@ -73,7 +77,7 @@ const StudentCards = () => {
   };
 
   const handleAddMarks = (student) => {
-    navigation.navigate('PresentationMarks', {
+    navigation.navigate('PresentationMarks', { 
       student: {
         index_number: student.indexNumber,
         firstName: student.firstName,
@@ -82,14 +86,6 @@ const StudentCards = () => {
         groupID: student.groupID
       }
     });
-  };
-
-  const handleBack = () => {
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    } else {
-      navigation.navigate('MarksDashboard');
-    }
   };
 
   const renderItem = ({ item }) => (
@@ -101,8 +97,8 @@ const StudentCards = () => {
         <Paragraph style={styles.subtitle}>Group ID: {item.groupID}</Paragraph>
       </Card.Content>
       <Card.Actions style={styles.cardActions}>
-        <Button
-          mode="contained"
+        <Button 
+          mode="contained" 
           onPress={() => handleAddMarks(item)}
           style={styles.button}
           labelStyle={styles.buttonLabel}
@@ -121,8 +117,8 @@ const StudentCards = () => {
         <>
           <Text style={styles.emptyText}>No students found</Text>
           {searchQuery !== '' && (
-            <Button
-              mode="text"
+            <Button 
+              mode="text" 
               onPress={() => setSearchQuery('')}
               style={styles.clearButton}
             >
@@ -136,13 +132,6 @@ const StudentCards = () => {
 
   return (
     <PaperProvider>
-      <View style={styles.headerContainer}>
-        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#6200ee" />
-          <Text style={styles.headerTitle}>Student List</Text>
-        </TouchableOpacity>
-      </View>
-
       <View style={styles.container}>
         <Searchbar
           placeholder="Search by name or index number"
@@ -153,10 +142,10 @@ const StudentCards = () => {
           iconColor="#6200ee"
           placeholderTextColor="#888"
         />
-
+        
         <FlatList
           data={filteredStudents}
-          keyExtractor={item => item.id}
+          keyExtractor={(item) => item.id}
           renderItem={renderItem}
           ListEmptyComponent={renderEmptyComponent}
           contentContainerStyle={styles.listContent}
@@ -169,25 +158,6 @@ const StudentCards = () => {
 };
 
 const styles = StyleSheet.create({
-  headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: 50,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-    backgroundColor: '#fff',
-    elevation: 4,
-  },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginLeft: 8,
-    color: '#6200ee',
-  },
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5'

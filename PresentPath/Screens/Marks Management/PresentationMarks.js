@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Alert, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, TextInput, Alert, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Client, Databases, ID } from 'appwrite';
 import Slider from '@react-native-community/slider';
 import { Picker } from '@react-native-picker/picker';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 const client = new Client();
 client.setEndpoint('https://cloud.appwrite.io/v1').setProject('67dd8453002a601838ad');
-
 const databases = new Databases(client);
+
 const databaseId = '67dd8a42000b2f5184aa';
 const collectionId = '67e012b2000fd11e41fb';
 const presentationSchedulesCollection = 'PresentationSchedules';
@@ -30,9 +29,8 @@ const PresentationMarks = () => {
     Semester: '',
     Presentation: '',
   });
+
   const [presentations, setPresentations] = useState([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState({ Year: false, Semester: false, Presentation: false });
 
   useEffect(() => {
     const fetchPresentations = async () => {
@@ -49,41 +47,24 @@ const PresentationMarks = () => {
   }, []);
 
   const handleSliderChange = (name, value) => {
-    setMarks(prevMarks => ({ ...prevMarks, [name]: value }));
-  };
-
-  const validateInputs = () => {
-    const newErrors = {
-      Year: !marks.Year || isNaN(parseInt(marks.Year)) || parseInt(marks.Year) < 1 || parseInt(marks.Year) > 4,
-      Semester: !marks.Semester || isNaN(parseInt(marks.Semester)) || (parseInt(marks.Semester) !== 1 && parseInt(marks.Semester) !== 2),
-      Presentation: !marks.Presentation,
-    };
-    setErrors(newErrors);
-    return !newErrors.Year && !newErrors.Semester && !newErrors.Presentation;
+    setMarks(prev => ({ ...prev, [name]: value }));
   };
 
   const submitMarks = async () => {
-    if (!marks.Student_no) {
-      Alert.alert('Error', 'Student No is required');
-      return;
-    }
-    if (!validateInputs()) {
-      Alert.alert('Error', 'Please correct the highlighted fields');
-      return;
-    }
+    const trimmedPresentation = marks.Presentation?.substring(0, 20); // ✅ Ensure valid length
 
-    setIsSubmitting(true);
+    if (!marks.Student_no) return Alert.alert('Error', 'Student No is required');
+    if (!marks.Presentation) return Alert.alert('Error', 'Please select a presentation');
+    if (!marks.Year || isNaN(parseInt(marks.Year))) return Alert.alert('Error', 'Year must be a valid number');
+    if (!marks.Semester || isNaN(parseInt(marks.Semester))) return Alert.alert('Error', 'Semester must be a valid number');
+
     try {
-      const response = await databases.createDocument(
-        databaseId,
-        collectionId,
-        ID.unique(),
-        {
-          ...marks,
-          Year: parseInt(marks.Year),
-          Semester: parseInt(marks.Semester),
-        }
-      );
+      const response = await databases.createDocument(databaseId, collectionId, ID.unique(), {
+        ...marks,
+        Year: parseInt(marks.Year),
+        Semester: parseInt(marks.Semester),
+        Presentation: trimmedPresentation,
+      });
 
       console.log('✅ Success:', response);
       Alert.alert('Success', 'Marks submitted successfully');
@@ -99,142 +80,108 @@ const PresentationMarks = () => {
         Semester: '',
         Presentation: '',
       });
-      setErrors({ Year: false, Semester: false, Presentation: false });
     } catch (error) {
       console.error('❌ Error:', error);
       Alert.alert('Error', 'Failed to submit marks');
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   return (
-    <KeyboardAwareScrollView
-      contentContainerStyle={styles.container}
-      enableOnAndroid={true}
-      extraScrollHeight={100}
-      keyboardShouldPersistTaps="handled"
-    >
-      {/* Back Button */}
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Text style={styles.backButtonText}>← Back</Text>
-      </TouchableOpacity>
-
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Presentation Marks</Text>
 
-      {/* Student Info Card */}
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Student Information</Text>
-        <TextInput
-          style={[styles.input, errors.Student_no && styles.inputError]}
-          placeholder="Student No"
-          value={marks.Student_no.toString()}
-          editable={false}
-        />
-        <TextInput
-          style={[styles.input, errors.Year && styles.inputError]}
-          placeholder="Year (1-4)"
-          value={marks.Year?.toString() || ''}
-          keyboardType="numeric"
-          onChangeText={value => {
-            if (/^[1-4]?$/.test(value)) {
-              setMarks(prevMarks => ({ ...prevMarks, Year: value }));
-              setErrors(prev => ({ ...prev, Year: false }));
-            }
-          }}
-          onBlur={() => {
-            const numericValue = parseInt(marks.Year, 10);
-            if (isNaN(numericValue) || numericValue < 1 || numericValue > 4) {
-              setErrors(prev => ({ ...prev, Year: true }));
-            } else {
-              setMarks(prevMarks => ({ ...prevMarks, Year: numericValue.toString() }));
-              setErrors(prev => ({ ...prev, Year: false }));
-            }
-          }}
-        />
-        <TextInput
-          style={[styles.input, errors.Semester && styles.inputError]}
-          placeholder="Semester (1-2)"
-          value={marks.Semester?.toString() || ''}
-          keyboardType="numeric"
-          onChangeText={value => {
-            if (/^[1-2]?$/.test(value)) {
-              setMarks(prevMarks => ({ ...prevMarks, Semester: value }));
-              setErrors(prev => ({ ...prev, Semester: false }));
-            }
-          }}
-          onBlur={() => {
-            const numericValue = parseInt(marks.Semester, 10);
-            if (isNaN(numericValue) || (numericValue !== 1 && numericValue !== 2)) {
-              setErrors(prev => ({ ...prev, Semester: true }));
-            } else {
-              setMarks(prevMarks => ({ ...prevMarks, Semester: numericValue.toString() }));
-              setErrors(prev => ({ ...prev, Semester: false }));
-            }
-          }}
-        />
-        <View style={[styles.dropdownContainer, errors.Presentation && styles.inputError]}>
-          <Text style={styles.label}>Select Presentation</Text>
-          <Picker
-            selectedValue={marks.Presentation}
-            onValueChange={itemValue => {
-              setMarks(prevMarks => ({ ...prevMarks, Presentation: itemValue }));
-              setErrors(prev => ({ ...prev, Presentation: !itemValue }));
-            }}
-            style={styles.picker}
-          >
-            <Picker.Item label="Select a presentation" value="" />
-            {presentations.map((title, index) => (
-              <Picker.Item key={index} label={title} value={title} />
-            ))}
-          </Picker>
-        </View>
-      </View>
+      <TextInput
+        style={styles.input}
+        placeholder="Student No"
+        value={marks.Student_no.toString()}
+        editable={false}
+      />
 
-      {/* Marks Card */}
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Evaluation Marks</Text>
-        {[
-          { label: 'Content Quality', key: 'Content_Quality' },
-          { label: 'Presentation Skills', key: 'Presentation_Skills' },
-          { label: 'Slide Design', key: 'Slide_Design' },
-          { label: 'Engagement & Interaction', key: 'Engagement_And_Interaction' },
-          { label: 'Time Management', key: 'Time_Management' },
-        ].map(item => (
-          <View key={item.key} style={styles.sliderContainer}>
-            <Text style={styles.label}>{item.label}: {marks[item.key]}</Text>
-            <Slider
-              style={styles.slider}
-              minimumValue={1}
-              maximumValue={10}
-              step={1}
-              value={marks[item.key]}
-              onValueChange={value => handleSliderChange(item.key, value)}
-              minimumTrackTintColor="#007bff"
-              maximumTrackTintColor="#ccc"
-              thumbTintColor="#007bff"
+      <TextInput
+        style={styles.input}
+        placeholder="Year"
+        value={marks.Year?.toString() || ""}
+        keyboardType="numeric"
+        onChangeText={value => {
+          if (/^[1-4]?$/.test(value)) {
+            setMarks(prev => ({ ...prev, Year: value }));
+          }
+        }}
+        onBlur={() => {
+          const val = parseInt(marks.Year, 10);
+          if (isNaN(val) || val < 1 || val > 4) {
+            setMarks(prev => ({ ...prev, Year: "" }));
+          } else {
+            setMarks(prev => ({ ...prev, Year: val }));
+          }
+        }}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Semester"
+        value={marks.Semester?.toString() || ""}
+        keyboardType="numeric"
+        onChangeText={value => {
+          if (/^[1-2]?$/.test(value)) {
+            setMarks(prev => ({ ...prev, Semester: value }));
+          }
+        }}
+        onBlur={() => {
+          const val = parseInt(marks.Semester, 10);
+          if (isNaN(val) || (val !== 1 && val !== 2)) {
+            setMarks(prev => ({ ...prev, Semester: "" }));
+          } else {
+            setMarks(prev => ({ ...prev, Semester: val }));
+          }
+        }}
+      />
+
+      <View style={styles.dropdownContainer}>
+        <Text style={styles.label}>Select Presentation</Text>
+        <Picker
+          selectedValue={marks.Presentation}
+          onValueChange={val => setMarks(prev => ({ ...prev, Presentation: val }))}
+        >
+          <Picker.Item label="Select a presentation" value="" />
+          {presentations.map((title, index) => (
+            <Picker.Item
+              key={index}
+              label={title.length > 20 ? title.substring(0, 20) + '...' : title}
+              value={title}
             />
-          </View>
-        ))}
+          ))}
+        </Picker>
       </View>
 
-      {/* Action Buttons */}
-      <TouchableOpacity
-        style={[styles.submitButton, isSubmitting && styles.disabledButton]}
-        onPress={submitMarks}
-        disabled={isSubmitting}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.submitText}>{isSubmitting ? 'Submitting...' : 'Submit'}</Text>
+      {[
+        { label: 'Content Quality', key: 'Content_Quality' },
+        { label: 'Presentation Skills', key: 'Presentation_Skills' },
+        { label: 'Slide Design', key: 'Slide_Design' },
+        { label: 'Engagement & Interaction', key: 'Engagement_And_Interaction' },
+        { label: 'Time Management', key: 'Time_Management' },
+      ].map(item => (
+        <View key={item.key} style={styles.sliderContainer}>
+          <Text style={styles.label}>{item.label}: {marks[item.key]}</Text>
+          <Slider
+            style={styles.slider}
+            minimumValue={1}
+            maximumValue={10}
+            step={1}
+            value={marks[item.key]}
+            onValueChange={value => handleSliderChange(item.key, value)}
+          />
+        </View>
+      ))}
+
+      <TouchableOpacity style={styles.submitButton} onPress={submitMarks}>
+        <Text style={styles.submitText}>Submit</Text>
       </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.viewButton}
-        onPress={() => navigation.navigate('StudentMarksList')}
-        activeOpacity={0.7}
-      >
+
+      <TouchableOpacity style={styles.viewButton} onPress={() => navigation.navigate('StudentMarksList')}>
         <Text style={styles.viewButtonText}>View All Student Marks</Text>
       </TouchableOpacity>
-    </KeyboardAwareScrollView>
+    </ScrollView>
   );
 };
 
@@ -242,84 +189,49 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 20,
-    paddingBottom: 40,
-    backgroundColor: '#f5f7fa',
+    backgroundColor: '#f1f4f8',
     alignItems: 'center',
-  },
-  card: {
-    width: '100%',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 5,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 15,
-  },
-  backButton: {
-    alignSelf: 'flex-start',
-    padding: 10,
-    backgroundColor: '#007bff',
-    borderRadius: 8,
-    marginBottom: 20,
-  },
-  backButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
+    fontWeight: 'bold',
+    marginBottom: 30,
     color: '#007bff',
-    marginBottom: 20,
     textAlign: 'center',
+    textTransform: 'uppercase',
   },
   input: {
-    width: '100%',
+    width: '90%',
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 15,
+    borderColor: '#ccc',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
     backgroundColor: '#fff',
     fontSize: 16,
-    color: '#333',
-  },
-  inputError: {
-    borderColor: '#dc3545',
-    borderWidth: 2,
+    elevation: 3,
   },
   dropdownContainer: {
-    width: '100%',
+    width: '90%',
+    marginBottom: 20,
     backgroundColor: '#fff',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    marginBottom: 15,
-    paddingHorizontal: 10,
-  },
-  picker: {
-    width: '100%',
-    height: 50,
+    borderRadius: 12,
+    padding: 10,
+    elevation: 3,
   },
   label: {
     fontSize: 16,
     fontWeight: '600',
+    marginBottom: 10,
     color: '#333',
-    marginBottom: 8,
   },
   sliderContainer: {
-    width: '100%',
+    width: '90%',
     marginBottom: 20,
+    padding: 10,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    elevation: 3,
   },
   slider: {
     width: '100%',
@@ -327,40 +239,30 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     backgroundColor: '#007bff',
-    paddingVertical: 16,
-    borderRadius: 10,
-    width: '100%',
+    paddingVertical: 14,
+    borderRadius: 12,
+    width: '90%',
     alignItems: 'center',
-    marginBottom: 15,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  disabledButton: {
-    backgroundColor: '#6c757d',
-    opacity: 0.7,
+    marginBottom: 10,
   },
   submitText: {
     color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
   },
   viewButton: {
     backgroundColor: '#28a745',
-    paddingVertical: 16,
-    borderRadius: 10,
-    width: '100%',
+    paddingVertical: 14,
+    borderRadius: 12,
+    width: '90%',
     alignItems: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 2 },
   },
   viewButtonText: {
     color: '#fff',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
   },
 });
 

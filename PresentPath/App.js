@@ -54,6 +54,7 @@ function App() {
         {/* Add more screens as needed */}
         
          <Stack.Screen name="Presentation_Marks" component={Presentation_Marks} />
+         <Stack.Screen name="PresentationMarks" component={PresentationMarks} />
          <Stack.Screen name="MyPresentation" component={MyPresentation} />
          <Stack.Screen name="UpdateProfile" component={UpdateProfile} /> 
           <Stack.Screen name="StudentProfile" component={StudentProfile} />
