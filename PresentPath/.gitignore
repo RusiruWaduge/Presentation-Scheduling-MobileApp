@@ -59,3 +59,7 @@ xcuserdata/
 *.apk
 *.ipa
 ReactAndroid-temp.aar
+
+venv/lib/
+venv/bin/
+venv/pyvenv.cfg
