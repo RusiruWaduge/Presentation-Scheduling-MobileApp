@@ -2,11 +2,20 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, FlatList, Alert } from 'react-native';
 import { Client, Databases, Query } from 'appwrite';
-import { Card, Title, Paragraph, Button, Provider as PaperProvider, Searchbar, Text, ActivityIndicator } from 'react-native-paper';
+import { 
+  Card, 
+  Title, 
+  Paragraph, 
+  Button, 
+  Provider as PaperProvider, 
+  Searchbar, 
+  Text, 
+  ActivityIndicator 
+} from 'react-native-paper';
 
+// Appwrite client setup
 const client = new Client();
 client.setEndpoint('https://cloud.appwrite.io/v1').setProject('67dd8453002a601838ad');
-
 const databases = new Databases(client);
 const databaseId = '67dd8a42000b2f5184aa';
 const collectionId = '67f22df100281c3981da';
@@ -27,9 +36,9 @@ const StudentCards = ({ navigation }) => {
       setFilteredStudents(students);
     } else {
       const filtered = students.filter(student =>
-        student.indexNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        student.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        student.lastName.toLowerCase().includes(searchQuery.toLowerCase())
+        (student.indexNumber && student.indexNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (student.firstName && student.firstName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (student.lastName && student.lastName.toLowerCase().includes(searchQuery.toLowerCase()))
       );
       setFilteredStudents(filtered);
     }
@@ -41,14 +50,16 @@ const StudentCards = ({ navigation }) => {
       const response = await databases.listDocuments(databaseId, collectionId, [
         Query.orderAsc('lastName')
       ]);
+
       const formatted = response.documents.map((doc) => ({
         id: doc.$id,
-        firstName: doc.firstName,
-        lastName: doc.lastName,
-        indexNumber: doc.indexNumber,
-        semester: doc.semester,
-        groupID: doc.groupID,
+        firstName: doc.firstName || '',
+        lastName: doc.lastName || '',
+        indexNumber: doc.indexNumber || '',
+        semester: doc.semester || '',
+        groupID: doc.groupID || '',
       }));
+
       setStudents(formatted);
       setFilteredStudents(formatted);
     } catch (error) {
@@ -68,7 +79,7 @@ const StudentCards = ({ navigation }) => {
   const handleAddMarks = (student) => {
     navigation.navigate('PresentationMarks', { 
       student: {
-        index_number: student.indexNumber, // Changed to match PresentationMarks expectation
+        index_number: student.indexNumber,
         firstName: student.firstName,
         lastName: student.lastName,
         semester: student.semester,

@@ -7,8 +7,8 @@ import { Picker } from '@react-native-picker/picker';
 
 const client = new Client();
 client.setEndpoint('https://cloud.appwrite.io/v1').setProject('67dd8453002a601838ad');
-
 const databases = new Databases(client);
+
 const databaseId = '67dd8a42000b2f5184aa';
 const collectionId = '67e012b2000fd11e41fb';
 const presentationSchedulesCollection = 'PresentationSchedules';
@@ -19,7 +19,7 @@ const PresentationMarks = () => {
   const { student } = route.params;
 
   const [marks, setMarks] = useState({
-    Student_no: student.index_number, // Now matches the passed prop
+    Student_no: student.index_number,
     Content_Quality: 5,
     Presentation_Skills: 5,
     Slide_Design: 5,
@@ -47,41 +47,24 @@ const PresentationMarks = () => {
   }, []);
 
   const handleSliderChange = (name, value) => {
-    setMarks(prevMarks => ({ ...prevMarks, [name]: value }));
+    setMarks(prev => ({ ...prev, [name]: value }));
   };
 
   const submitMarks = async () => {
-    if (!marks.Student_no) {
-      Alert.alert('Error', 'Student No is required');
-      return;
-    }
+    const trimmedPresentation = marks.Presentation?.substring(0, 20); // ✅ Ensure valid length
 
-    if (!marks.Presentation) {
-      Alert.alert('Error', 'Please select a presentation');
-      return;
-    }
-
-    if (!marks.Year || isNaN(parseInt(marks.Year))) {
-      Alert.alert('Error', 'Year must be a valid number');
-      return;
-    }
-
-    if (!marks.Semester || isNaN(parseInt(marks.Semester))) {
-      Alert.alert('Error', 'Semester must be a valid number');
-      return;
-    }
+    if (!marks.Student_no) return Alert.alert('Error', 'Student No is required');
+    if (!marks.Presentation) return Alert.alert('Error', 'Please select a presentation');
+    if (!marks.Year || isNaN(parseInt(marks.Year))) return Alert.alert('Error', 'Year must be a valid number');
+    if (!marks.Semester || isNaN(parseInt(marks.Semester))) return Alert.alert('Error', 'Semester must be a valid number');
 
     try {
-      const response = await databases.createDocument(
-        databaseId,
-        collectionId,
-        ID.unique(),
-        {
-          ...marks,
-          Year: parseInt(marks.Year),
-          Semester: parseInt(marks.Semester),
-        }
-      );
+      const response = await databases.createDocument(databaseId, collectionId, ID.unique(), {
+        ...marks,
+        Year: parseInt(marks.Year),
+        Semester: parseInt(marks.Semester),
+        Presentation: trimmedPresentation,
+      });
 
       console.log('✅ Success:', response);
       Alert.alert('Success', 'Marks submitted successfully');
@@ -107,66 +90,77 @@ const PresentationMarks = () => {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Presentation Marks</Text>
 
-      <TextInput style={styles.input} placeholder="Student No" value={marks.Student_no.toString()} editable={false} />
+      <TextInput
+        style={styles.input}
+        placeholder="Student No"
+        value={marks.Student_no.toString()}
+        editable={false}
+      />
 
       <TextInput
-  style={styles.input}
-  placeholder="Year"
-  value={marks.Year?.toString() || ""}
-  keyboardType="numeric"
-  onChangeText={value => {
-    if (/^[1-4]?$/.test(value)) {  // Only allow numbers 1-4
-      setMarks(prevMarks => ({ ...prevMarks, Year: value }));
-    }
-  }}
-  onBlur={() => {
-    const numericValue = parseInt(marks.Year, 10);
-    if (isNaN(numericValue) || numericValue < 1 || numericValue > 4) {
-      setMarks(prevMarks => ({ ...prevMarks, Year: "" })); // Reset if invalid
-    } else {
-      setMarks(prevMarks => ({ ...prevMarks, Year: numericValue })); // Save valid input
-    }
-  }}
-/>
+        style={styles.input}
+        placeholder="Year"
+        value={marks.Year?.toString() || ""}
+        keyboardType="numeric"
+        onChangeText={value => {
+          if (/^[1-4]?$/.test(value)) {
+            setMarks(prev => ({ ...prev, Year: value }));
+          }
+        }}
+        onBlur={() => {
+          const val = parseInt(marks.Year, 10);
+          if (isNaN(val) || val < 1 || val > 4) {
+            setMarks(prev => ({ ...prev, Year: "" }));
+          } else {
+            setMarks(prev => ({ ...prev, Year: val }));
+          }
+        }}
+      />
 
-<TextInput
-  style={styles.input}
-  placeholder="Semester"
-  value={marks.Semester?.toString() || ""}
-  keyboardType="numeric"
-  onChangeText={value => {
-    if (/^[1-2]?$/.test(value)) { // Only allow numbers 1-2
-      setMarks(prevMarks => ({ ...prevMarks, Semester: value }));
-    }
-  }}
-  onBlur={() => {
-    const numericValue = parseInt(marks.Semester, 10);
-    if (isNaN(numericValue) || (numericValue !== 1 && numericValue !== 2)) {
-      setMarks(prevMarks => ({ ...prevMarks, Semester: "" })); // Reset if invalid
-    } else {
-      setMarks(prevMarks => ({ ...prevMarks, Semester: numericValue })); // Save valid input
-    }
-  }}
-/>
+      <TextInput
+        style={styles.input}
+        placeholder="Semester"
+        value={marks.Semester?.toString() || ""}
+        keyboardType="numeric"
+        onChangeText={value => {
+          if (/^[1-2]?$/.test(value)) {
+            setMarks(prev => ({ ...prev, Semester: value }));
+          }
+        }}
+        onBlur={() => {
+          const val = parseInt(marks.Semester, 10);
+          if (isNaN(val) || (val !== 1 && val !== 2)) {
+            setMarks(prev => ({ ...prev, Semester: "" }));
+          } else {
+            setMarks(prev => ({ ...prev, Semester: val }));
+          }
+        }}
+      />
 
       <View style={styles.dropdownContainer}>
         <Text style={styles.label}>Select Presentation</Text>
         <Picker
           selectedValue={marks.Presentation}
-          onValueChange={itemValue => setMarks(prevMarks => ({ ...prevMarks, Presentation: itemValue }))}
+          onValueChange={val => setMarks(prev => ({ ...prev, Presentation: val }))}
         >
           <Picker.Item label="Select a presentation" value="" />
           {presentations.map((title, index) => (
-            <Picker.Item key={index} label={title} value={title} />
+            <Picker.Item
+              key={index}
+              label={title.length > 20 ? title.substring(0, 20) + '...' : title}
+              value={title}
+            />
           ))}
         </Picker>
       </View>
 
-      {[{ label: 'Content Quality', key: 'Content_Quality' },
+      {[
+        { label: 'Content Quality', key: 'Content_Quality' },
         { label: 'Presentation Skills', key: 'Presentation_Skills' },
         { label: 'Slide Design', key: 'Slide_Design' },
         { label: 'Engagement & Interaction', key: 'Engagement_And_Interaction' },
-        { label: 'Time Management', key: 'Time_Management' }].map(item => (
+        { label: 'Time Management', key: 'Time_Management' },
+      ].map(item => (
         <View key={item.key} style={styles.sliderContainer}>
           <Text style={styles.label}>{item.label}: {marks[item.key]}</Text>
           <Slider
@@ -216,9 +210,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     fontSize: 16,
     elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 1, height: 2 },
   },
   dropdownContainer: {
     width: '90%',
@@ -227,9 +218,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 10,
     elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 1, height: 2 },
   },
   label: {
     fontSize: 16,
@@ -244,9 +232,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
     elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 1, height: 2 },
   },
   slider: {
     width: '100%',
@@ -259,10 +244,6 @@ const styles = StyleSheet.create({
     width: '90%',
     alignItems: 'center',
     marginBottom: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 1, height: 2 },
   },
   submitText: {
     color: '#fff',
@@ -276,10 +257,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     width: '90%',
     alignItems: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 1, height: 2 },
   },
   viewButtonText: {
     color: '#fff',
