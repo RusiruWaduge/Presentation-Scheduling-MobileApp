@@ -22,7 +22,7 @@ const ContactUs = () => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Image
-        source={require('../../assets/Logo.png')} // 👈 Place your logo in assets folder
+        source={require('../../assets/logo.png')} // 👈 Place your logo in assets folder
         style={styles.logo}
         resizeMode="contain"
       />

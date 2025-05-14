@@ -6,12 +6,13 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  Button,
+  Pressable,
 } from 'react-native';
 import { Card } from 'react-native-paper';
 import { Calendar } from 'react-native-calendars';
 import { account, databases } from '../../Libraries/appwriteConfig';
 import { Query } from 'appwrite';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 const DATABASE_ID = '67dd8a42000b2f5184aa';
 const COLLECTION_ID = '67f22df100281c3981da';
@@ -20,7 +21,6 @@ const HomeScreen = ({ navigation }) => {
   const [studentData, setStudentData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Sample Upcoming Projects
   const upcomingProjects = [
     { id: 1, title: 'AI Research Presentation', date: '2025-03-28' },
     { id: 2, title: 'Final Year Project Review', date: '2025-04-05' },
@@ -80,6 +80,8 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 20 }}>
+
+
       {/* Header */}
       <Text style={styles.header}>Welcome to Your Dashboard</Text>
 
@@ -125,18 +127,16 @@ const HomeScreen = ({ navigation }) => {
         }}
       />
 
-      {/* Features Section */}
+      {/* View Performance */}
       <Text style={styles.sectionTitle}>🚀 View Your Performance</Text>
       <View style={styles.featureContainer}>
-      {/* Performance Navigation */}
-           <TouchableOpacity
-             style={styles.button}
-             onPress={() => navigation.navigate('StdProfile')}
-           >
-             <Text style={styles.buttonText}>View Your Performance</Text>
-           </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate('StdProfile')}
+        >
+          <Text style={styles.buttonText}>View Your Performance</Text>
+        </TouchableOpacity>
       </View>
-
     </ScrollView>
   );
 };
@@ -146,6 +146,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f9f9f9',
     paddingHorizontal: 20,
+  },
+  menuButton: {
+    marginTop: 40,
+    alignSelf: 'flex-start',
+    padding: 8,
   },
   header: {
     fontSize: 26,
@@ -192,21 +197,9 @@ const styles = StyleSheet.create({
     marginTop: 10,
     gap: 10,
   },
-  featureButton: {
-    backgroundColor: '#007bff',
-    paddingVertical: 15,
-    borderRadius: 12,
-    alignItems: 'center',
-    elevation: 3,
-  },
-  featureText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
   button: {
     marginTop: 20,
-    backgroundColor: '#28a745', // Bootstrap-style green
+    backgroundColor: '#28a745',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 30,
@@ -216,17 +209,14 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  
   buttonText: {
     fontSize: 16,
-    color: '#ffffff', // White text on green background
+    color: '#ffffff',
     fontWeight: 'bold',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     textAlign: 'center',
   }
-  
-  
 });
 
 export default HomeScreen;

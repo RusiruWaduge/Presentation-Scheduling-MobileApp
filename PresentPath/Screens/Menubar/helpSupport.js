@@ -13,7 +13,7 @@ const HelpSupport = () => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Image
-        source={require('../../assets/Logo.png')} // ✅ Place your logo here
+        source={require('../../assets/logo.png')} // ✅ Place your logo here
         style={styles.logo}
         resizeMode="contain"
       />

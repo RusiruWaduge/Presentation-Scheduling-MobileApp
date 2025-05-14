@@ -5,7 +5,7 @@ const AboutPage = () => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Image
-        source={require('../../assets/Logo.png')} // Optional: your app logo
+        source={require('../../assets/logo.png')} // Optional: your app logo
         style={styles.logo}
         resizeMode="contain"
       />

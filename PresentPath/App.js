@@ -2,6 +2,7 @@
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
+import { createDrawerNavigator } from '@react-navigation/drawer';
 import UserLoginScreen from "./Screens/UserLoginScreen";
 import UserSignupScreen from "./Screens/UserSignupScreen";
 import MainDashboardScreen from "./Screens/MainDashboard";
@@ -21,9 +22,26 @@ import ExaminerContact from "./Screens/UserProfileManagement/ExaminerContact";
 import UpcomingPresentation from "./Screens/UserProfileManagement/UpcomingPresentation";
 import AddStickyNote from "./Screens/UserProfileManagement/AddStickyNotes";
 import StickyNotes from "./Screens/UserProfileManagement/StickyNotes";
+import About from './Screens/Menubar/aboutPage';
+import HelpSupport from './Screens/Menubar/helpSupport';
+import ContactUs from './Screens/Menubar/contactUs';
+
 
 
 const Stack = createStackNavigator();
+const Drawer = createDrawerNavigator();
+
+// 👇 Drawer that wraps authenticated screens
+function DrawerNavigator() {
+  return (
+    <Drawer.Navigator initialRouteName="Home">
+      <Drawer.Screen name="Home" component={UserMenu} options={{ title: "Home Dashboard" }} />
+      <Drawer.Screen name="About" component={About} />
+      <Drawer.Screen name="Help & Support" component={HelpSupport} />
+      <Drawer.Screen name="Contact Us" component={ContactUs} />
+    </Drawer.Navigator>
+  );
+}
 
 
 function App() {
@@ -33,7 +51,7 @@ function App() {
         <Stack.Screen name="OnboardingScreen" component={OnboardingScreen} />
         <Stack.Screen name="UserLogin" component={UserLoginScreen} />
         <Stack.Screen name="UserSignup" component={UserSignupScreen} />
-        <Stack.Screen name="UserHome" component={UserMenu} />
+        <Stack.Screen name="UserHome" component={DrawerNavigator} />
         <Stack.Screen name="MainDashboard" component={MainDashboardScreen} />
         <Stack.Screen name="MarksDashboard" component={MarksDashboard} />
         <Stack.Screen name="PresentationDashboard" component={PresentationDashboard} />
