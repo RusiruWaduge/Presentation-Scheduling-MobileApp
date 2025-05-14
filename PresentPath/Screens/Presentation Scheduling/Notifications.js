@@ -2,31 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { Ionicons } from 'react-native-vector-icons';
-import { format } from 'date-fns'; // Import date-fns for formatting dates
 
 // Import your Appwrite database service to interact with the examiner data
 import { GetSchedules } from '../../Libraries/databaseService'; // Adjust the import path as necessary
 
-// Utility function to pad numbers (used in time formatting)
+// ----- Helper functions for formatting date and time -----
 const pad = (num) => num.toString().padStart(2, '0');
 
-// Format a date (assumed to be in "YYYY-MM-DD") as "13 April 2025"
-const formatFriendlyDate = (dateString) => {
-  const options = { year: 'numeric', month: 'long', day: 'numeric' };
-  return new Date(dateString).toLocaleDateString(undefined, options);
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  const options = { year: 'numeric', month: 'short', day: 'numeric' };
+  return date.toLocaleDateString(undefined, options);
 };
 
-// Updated time formatting function that uses UTC hours/minutes
-const formatFriendlyTime = (timeString) => {
+const formatTime = (timeString) => {
   const date = new Date(timeString);
-  // If the conversion fails, return the original string.
   if (isNaN(date)) return timeString;
-  const hours = date.getUTCHours();      // Use UTC values like in your dashboard
+  
+  const hours = date.getUTCHours();
   const minutes = date.getUTCMinutes();
-  if (hours === 0 && minutes === 0) return '12:00 AM';
-  if (hours === 12 && minutes === 0) return '12:00 PM';
+  
+  if (hours === 0 && minutes === 0) return `12:00 AM`;  
+  if (hours === 12 && minutes === 0) return `12:00 PM`;
+  
   const period = hours < 12 ? 'AM' : 'PM';
   const hour12 = hours % 12 === 0 ? 12 : hours % 12;
+  
   return `${hour12}:${pad(minutes)} ${period}`;
 };
 
@@ -35,23 +36,19 @@ const NotificationsScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
 
-  // Function to request notification permissions and get token
+  // Request notification permissions and set up notification listener
   useEffect(() => {
     const registerForPushNotifications = async () => {
       const { status } = await Notifications.requestPermissionsAsync();
       if (status === 'granted') {
         const token = await Notifications.getExpoPushTokenAsync();
         console.log('Push notification token:', token.data);
-        
-        // Store the token in your examiner's document (store this in Appwrite)
-        // You would need to use your Appwrite service to update the examiner's token in the database
-        // Example: storePushTokenInDatabase(token.data); 
+        // Here you can store the token in your database if needed.
       }
     };
 
-    // Set up listener for notifications when the app is in the foreground
-    const notificationListener = Notifications.addNotificationReceivedListener(notification => {
-      setNotifications(prevNotifications => [
+    const notificationListener = Notifications.addNotificationReceivedListener((notification) => {
+      setNotifications((prevNotifications) => [
         ...prevNotifications,
         notification,
       ]);
@@ -64,58 +61,52 @@ const NotificationsScreen = () => {
     };
   }, []);
 
-  // Function to handle notification click
+  // Handle notification click to show details in a modal
   const handleNotificationClick = (notification) => {
     setSelectedNotification(notification);
     setModalVisible(true);
   };
 
-  // Function to handle closing of the notification modal
+  // Close the notification modal
   const closeModal = () => {
     setModalVisible(false);
     setSelectedNotification(null);
   };
 
-  // Function to format the date in a user-friendly format
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return format(date, 'MMM dd, yyyy hh:mm a'); // Format date as "Aug 21, 2025 12:30 PM"
-  };
-
-  // Function to delete a notification
-  const deleteNotification = (notification) => {
-    setNotifications(prevNotifications =>
-      prevNotifications.filter(item => item !== notification)
-    );
-  };
-
-  // Fetch schedules to show notifications for upcoming events for examiners
+  // Fetch schedules and map them as notifications
   useEffect(() => {
     const fetchSchedules = async () => {
       try {
         const schedules = await GetSchedules();
-        // Filter and display upcoming presentation reminders for the examiner
-        const upcomingNotifications = schedules.filter(schedule => {
+        // Filter schedules with presentations due in the next 24 hours
+        const upcomingNotifications = schedules.filter((schedule) => {
           const currentDate = new Date();
           const presentationDate = new Date(schedule.date);
           const timeDiff = presentationDate.getTime() - currentDate.getTime();
-          
-          // If the presentation is in 24 hours, schedule a reminder
-          return timeDiff <= 24 * 60 * 60 * 1000 && timeDiff > 0; // 24 hours
+          return timeDiff <= 24 * 60 * 60 * 1000 && timeDiff > 0;
         });
 
-        // Map schedules to notifications to be shown
-        const reminderNotifications = upcomingNotifications.map(schedule => ({
-          request: {
-            content: {
-              title: `Reminder: Presentation for Group ${schedule.group_id}`,
-              body: `The presentation for group ${schedule.group_id} is due tomorrow at ${formatFriendlyTime(schedule.date)}`,
-              data: {
-                time: schedule.date,  // Store the date for the reminder
+        // Map the upcoming schedules to notification objects
+        const reminderNotifications = upcomingNotifications.map((schedule) => {
+          // If both date and a separate time are provided, combine them;
+          // otherwise, use the full date stored in schedule.date.
+          const dateTimeString = schedule.time 
+            ? `${schedule.date}T${schedule.time}` 
+            : schedule.date;
+          const formattedTime = formatTime(dateTimeString);
+
+          return {
+            request: {
+              content: {
+                title: `Reminder: Presentation for Group ${schedule.group_id}`,
+                body: `The presentation for group ${schedule.group_id} is due tomorrow at ${formattedTime}`,
+                data: {
+                  time: schedule.date, // Storing the date for the reminder
+                },
               },
             },
-          },
-        }));
+          };
+        });
 
         setNotifications(reminderNotifications);
       } catch (error) {
@@ -126,7 +117,14 @@ const NotificationsScreen = () => {
     fetchSchedules();
   }, []);
 
-  // Function to render notification item
+  // Delete a notification from the list
+  const deleteNotification = (notification) => {
+    setNotifications((prevNotifications) =>
+      prevNotifications.filter((item) => item !== notification)
+    );
+  };
+
+  // Render a single notification item
   const renderNotification = ({ item }) => (
     <View style={styles.notificationItem}>
       <TouchableOpacity onPress={() => handleNotificationClick(item)}>
@@ -152,10 +150,10 @@ const NotificationsScreen = () => {
         />
       )}
 
-      {/* Modal for displaying notification details */}
+      {/* Modal to display notification details */}
       <Modal
         visible={modalVisible}
-        transparent={true}
+        transparent
         animationType="slide"
         onRequestClose={closeModal}
       >
@@ -177,49 +175,49 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#f4f9fc', // Soft background color
+    backgroundColor: '#f4f9fc',
   },
   header: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
-    color: '#1f4068', // Darker text color for header
+    color: '#1f4068',
   },
   notificationItem: {
-    flexDirection: 'row', // Horizontal layout for notifications
-    justifyContent: 'flex-start', // Align text to the left
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
     padding: 10,
     marginBottom: 15,
-    backgroundColor: '#fff', // White background for notifications
+    backgroundColor: '#fff',
     borderRadius: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 6,
     shadowOpacity: 0.1,
     elevation: 2,
-    position: 'relative', // Ensure delete button is positioned correctly
-    paddingRight: 50, // Add extra space on the right to avoid collision with the delete button
+    position: 'relative',
+    paddingRight: 50,
   },
   notificationTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1f4068', // Dark blue title for readability
+    color: '#1f4068',
   },
   notificationMessage: {
     fontSize: 14,
-    color: '#555', // Lighter color for message text
+    color: '#555',
   },
   deleteButton: {
-    backgroundColor: '#ff6347', // Red background for delete button
-    paddingVertical: 8,   // Increased vertical padding to make it taller
-    paddingHorizontal: 15, // Horizontal padding for better width
-    borderRadius: 25,     // Rounded corners for a curved rectangle look
+    backgroundColor: '#ff6347',
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'absolute',  // Position the button outside of the flex flow
-    top: '50%',            // Center the button vertically within the item
-    right: 10,             // Position the button 10px from the right
-    transform: [{ translateY: -15 }], // Fine-tune the vertical centering
+    position: 'absolute',
+    top: '50%',
+    right: 10,
+    transform: [{ translateY: -15 }],
   },
   noNotificationsText: {
     textAlign: 'center',
