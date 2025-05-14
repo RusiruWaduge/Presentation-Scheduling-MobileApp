@@ -29,7 +29,7 @@ const Stack = createStackNavigator();
 function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="OnboardingScreen" screenOptions={{ headerShown: false }}>
+      <Stack.Navigator initialRouteName="UserHome" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="OnboardingScreen" component={OnboardingScreen} />
         <Stack.Screen name="UserLogin" component={UserLoginScreen} />
         <Stack.Screen name="UserSignup" component={UserSignupScreen} />

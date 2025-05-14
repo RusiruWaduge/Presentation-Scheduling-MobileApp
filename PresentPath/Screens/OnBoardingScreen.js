@@ -42,21 +42,21 @@ const OnboardingScreen = () => {
         />
         <Animated.View style={[styles.textContainer, { opacity: fadeAnim }, ]}>
         <View style={{ width: '100%', paddingHorizontal: 20 }}>
-  <Text 
-    numberOfLines={1}
-    style={{ 
-      fontSize: 25, 
-      fontWeight: '600', 
-      fontStyle: 'bold', 
-      fontFamily: 'sans-serif', 
-      color: 'white', 
-      textAlign: 'center', 
-      marginBottom: 20 
-    }}
-  >
-    "Present better with PresentPath"
-  </Text>
-</View>
+              <Text 
+                numberOfLines={1}
+                style={{ 
+                  fontSize: 25, 
+                  fontWeight: '600', 
+                  fontStyle: 'bold', 
+                  fontFamily: 'sans-serif', 
+                  color: 'white', 
+                  textAlign: 'center', 
+                  marginBottom: 20 
+                }}
+              >
+                "Present better with PresentPath"
+              </Text>
+            </View>
 
 
           <Text style={styles.text}>
