@@ -2,17 +2,10 @@
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
-<<<<<<< Updated upstream
 import { createDrawerNavigator } from '@react-navigation/drawer';
-=======
 
-
-
->>>>>>> Stashed changes
 import UserLoginScreen from "./Screens/UserLoginScreen";
-
 import UserSignupScreen from "./Screens/UserSignupScreen";
-
 import MainDashboardScreen from "./Screens/MainDashboard";
 import UserMenu from "./Screens/Menubar/userMenu";
 
@@ -22,7 +15,8 @@ import PresentationMarks from './Screens/Marks Management/PresentationMarks';
 import StudentMarksList from './Screens/Marks Management/Student_Marks_List';
 import StudentCards from './Screens/Marks Management/StudentCards';
 import OnboardingScreen from './Screens/OnBoardingScreen';
-//User Management Roots
+
+// User Management Roots
 import Presentation_Marks from './Screens/UserProfileManagement/Marks';
 import MyPresentation from './Screens/UserProfileManagement/MyPresentation';
 import UpdateProfile from './Screens/UserProfileManagement/UpdateProfile';
@@ -34,8 +28,6 @@ import StickyNotes from "./Screens/UserProfileManagement/StickyNotes";
 import About from './Screens/Menubar/aboutPage';
 import HelpSupport from './Screens/Menubar/helpSupport';
 import ContactUs from './Screens/Menubar/contactUs';
-
-
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -52,7 +44,6 @@ function DrawerNavigator() {
   );
 }
 
-
 function App() {
   return (
     <NavigationContainer>
@@ -64,33 +55,26 @@ function App() {
         <Stack.Screen name="MainDashboard" component={MainDashboardScreen} />
         <Stack.Screen name="MarksDashboard" component={MarksDashboard} />
         <Stack.Screen name="PresentationDashboard" component={PresentationDashboard} />
-         {/* These screens will be shown as modal/stack screens */}
-         
+        
         <Stack.Screen 
           name="Marks" 
           component={StudentMarksList} 
           options={{ title: 'Student Marks' }}
         />
-
-                <Stack.Screen 
-        name="Students" 
-        component={StudentCards} 
-        options={{ headerShown: false }}
+        <Stack.Screen 
+          name="Students" 
+          component={StudentCards} 
+          options={{ headerShown: false }}
         />
-
-        {/* Add more screens as needed */}
-        
-         <Stack.Screen name="Presentation_Marks" component={Presentation_Marks} />
-         <Stack.Screen name="PresentationMarks" component={PresentationMarks} />
-         <Stack.Screen name="MyPresentation" component={MyPresentation} />
-         <Stack.Screen name="UpdateProfile" component={UpdateProfile} /> 
-          <Stack.Screen name="StudentProfile" component={StudentProfile} />
-          <Stack.Screen name="ExaminerContact" component={ExaminerContact} />
-          <Stack.Screen name="UpcomingPresentation" component={UpcomingPresentation} />
-          <Stack.Screen name="AddStickyNote" component={AddStickyNote} />
-          <Stack.Screen name="StickyNotes" component={StickyNotes} />
-          
-         
+        <Stack.Screen name="Presentation_Marks" component={Presentation_Marks} />
+        <Stack.Screen name="PresentationMarks" component={PresentationMarks} />
+        <Stack.Screen name="MyPresentation" component={MyPresentation} />
+        <Stack.Screen name="UpdateProfile" component={UpdateProfile} />
+        <Stack.Screen name="StudentProfile" component={StudentProfile} />
+        <Stack.Screen name="ExaminerContact" component={ExaminerContact} />
+        <Stack.Screen name="UpcomingPresentation" component={UpcomingPresentation} />
+        <Stack.Screen name="AddStickyNote" component={AddStickyNote} />
+        <Stack.Screen name="StickyNotes" component={StickyNotes} />
       </Stack.Navigator>
     </NavigationContainer>
   );
