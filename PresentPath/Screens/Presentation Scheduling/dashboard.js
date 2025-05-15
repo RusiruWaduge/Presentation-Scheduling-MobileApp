@@ -762,15 +762,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
   },
-  modalButtonCancel: {
-    marginRight: SIZES.padding,
-  },
-  modalButtonConfirm: {
-    backgroundColor: COLORS.primary,
-    borderRadius: SIZES.radius,
-    paddingHorizontal: SIZES.padding,
-    paddingVertical: SIZES.padding / 1.5,
-  },
+modalButtonCancel: {
+  backgroundColor: '#ff4242',   // red color
+  borderRadius: SIZES.radius,
+  paddingHorizontal: SIZES.padding,
+  paddingVertical: SIZES.padding / 1.5,
+  marginRight: 12,              // space between buttons
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+
+modalButtonConfirm: {
+  backgroundColor: '#28a745',   // green color
+  borderRadius: SIZES.radius,
+  paddingHorizontal: SIZES.padding,
+  paddingVertical: SIZES.padding / 1.5,
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+
   modalButtonText: {
     color: COLORS.light,
     fontSize: SIZES.font,
