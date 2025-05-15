@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, FlatList, Alert } from 'react-native';
 import { Client, Databases, Query } from 'appwrite';
 import { 
+  Appbar,
   Card, 
   Title, 
   Paragraph, 
@@ -133,6 +134,13 @@ const StudentCards = ({ navigation }) => {
   return (
     <PaperProvider>
       <View style={styles.container}>
+        {/* Back Header */}
+        <Appbar.Header style={styles.appBar}>
+          <Appbar.BackAction onPress={() => navigation.navigate('MarksDashboard')} />
+          <Appbar.Content title="Student List" />
+        </Appbar.Header>
+
+        {/* Search Bar */}
         <Searchbar
           placeholder="Search by name or index number"
           onChangeText={setSearchQuery}
@@ -143,6 +151,7 @@ const StudentCards = ({ navigation }) => {
           placeholderTextColor="#888"
         />
         
+        {/* List of Students */}
         <FlatList
           data={filteredStudents}
           keyExtractor={(item) => item.id}
@@ -161,6 +170,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5'
+  },
+  appBar: {
+    backgroundColor: '#003366',
   },
   searchBar: {
     margin: 16,
@@ -196,7 +208,7 @@ const styles = StyleSheet.create({
   },
   button: {
     borderRadius: 8,
-    backgroundColor: '#6200ee',
+    backgroundColor: '#003366',
     paddingVertical: 4,
   },
   buttonLabel: {

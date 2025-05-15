@@ -51,7 +51,7 @@ const PresentationMarks = () => {
   };
 
   const submitMarks = async () => {
-    const trimmedPresentation = marks.Presentation?.substring(0, 20); // ✅ Ensure valid length
+    const trimmedPresentation = marks.Presentation?.substring(0, 20);
 
     if (!marks.Student_no) return Alert.alert('Error', 'Student No is required');
     if (!marks.Presentation) return Alert.alert('Error', 'Please select a presentation');
@@ -88,6 +88,11 @@ const PresentationMarks = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      {/* 🔙 Back Button */}
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('Students')}>
+        <Text style={styles.backButtonText}>← Back to Students</Text>
+      </TouchableOpacity>
+
       <Text style={styles.title}>Presentation Marks</Text>
 
       <TextInput
@@ -178,7 +183,7 @@ const PresentationMarks = () => {
         <Text style={styles.submitText}>Submit</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.viewButton} onPress={() => navigation.navigate('StudentMarksList')}>
+      <TouchableOpacity style={styles.viewButton} onPress={() => navigation.navigate('Marks')}>
         <Text style={styles.viewButtonText}>View All Student Marks</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -191,6 +196,15 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#f1f4f8',
     alignItems: 'center',
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+    marginBottom: 10,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: '#007bff',
+    fontWeight: '600',
   },
   title: {
     fontSize: 28,
