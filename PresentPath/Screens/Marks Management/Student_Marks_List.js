@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, TextInput, TouchableOpacity, Platform } from 'react-native';
 import { Client, Databases } from 'appwrite';
+import { useNavigation } from '@react-navigation/native';
 
 let Print, Sharing;
 
@@ -20,10 +21,12 @@ const databaseId = '67dd8a42000b2f5184aa';
 const collectionId = '67e012b2000fd11e41fb';
 
 const StudentMarksList = () => {
+  const navigation = useNavigation();
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editStudent, setEditStudent] = useState(null);
   const [updatedMarks, setUpdatedMarks] = useState({});
+  const [errors, setErrors] = useState({});
 
   const fetchStudentMarks = async () => {
     try {
@@ -31,33 +34,51 @@ const StudentMarksList = () => {
       setStudents(response.documents);
     } catch (error) {
       console.error('❌ Fetch Error:', error);
-      Alert.alert('Error', 'Failed to fetch student data');
+      showAlert('Error', 'Failed to fetch student data');
     } finally {
       setLoading(false);
     }
   };
 
-  const deleteStudent = async (id) => {
-    Alert.alert('Confirm Delete', 'Are you sure you want to delete this student?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            setLoading(true);
-            await databases.deleteDocument(databaseId, collectionId, id);
-            setStudents((prev) => prev.filter((student) => student.$id !== id));
-            Alert.alert('Success', 'Student deleted successfully');
-          } catch (error) {
-            console.error('❌ Delete Error:', error);
-            Alert.alert('Error', 'Failed to delete student');
-          } finally {
-            setLoading(false);
-          }
+  const showAlert = (title, message) => {
+    if (Platform.OS === 'web') {
+      window.alert(`${title}: ${message}`);
+    } else {
+      Alert.alert(title, message);
+    }
+  };
+
+  const confirmDelete = (id) => {
+    const message = 'Are you sure you want to delete this student?';
+    if (Platform.OS === 'web') {
+      const isConfirmed = window.confirm(message);
+      if (isConfirmed) {
+        deleteStudent(id);
+      }
+    } else {
+      Alert.alert('Confirm Delete', message, [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => deleteStudent(id),
         },
-      },
-    ]);
+      ]);
+    }
+  };
+
+  const deleteStudent = async (id) => {
+    try {
+      setLoading(true);
+      await databases.deleteDocument(databaseId, collectionId, id);
+      setStudents((prev) => prev.filter((student) => student.$id !== id));
+      showAlert('Success', 'Student deleted successfully');
+    } catch (error) {
+      console.error('❌ Delete Error:', error);
+      showAlert('Error', 'Failed to delete student');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const startEdit = (student) => {
@@ -69,25 +90,53 @@ const StudentMarksList = () => {
       Engagement_And_Interaction: student.Engagement_And_Interaction.toString(),
       Time_Management: student.Time_Management.toString(),
     });
+    setErrors({});
+  };
+
+  const validateMarks = () => {
+    const newErrors = {};
+    const markFields = [
+      'Content_Quality',
+      'Presentation_Skills',
+      'Slide_Design',
+      'Engagement_And_Interaction',
+      'Time_Management'
+    ];
+
+    markFields.forEach(field => {
+      const value = updatedMarks[field];
+      if (value === '' || isNaN(value)) {
+        newErrors[field] = 'Please enter a number';
+      } else if (parseInt(value) < 0 || parseInt(value) > 10) {
+        newErrors[field] = 'Marks must be between 0-10';
+      }
+    });
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const updateStudent = async (id) => {
+    if (!validateMarks()) {
+      return;
+    }
+
     try {
       setLoading(true);
       const marks = {
-        Content_Quality: parseInt(updatedMarks.Content_Quality) || 0,
-        Presentation_Skills: parseInt(updatedMarks.Presentation_Skills) || 0,
-        Slide_Design: parseInt(updatedMarks.Slide_Design) || 0,
-        Engagement_And_Interaction: parseInt(updatedMarks.Engagement_And_Interaction) || 0,
-        Time_Management: parseInt(updatedMarks.Time_Management) || 0,
+        Content_Quality: parseInt(updatedMarks.Content_Quality),
+        Presentation_Skills: parseInt(updatedMarks.Presentation_Skills),
+        Slide_Design: parseInt(updatedMarks.Slide_Design),
+        Engagement_And_Interaction: parseInt(updatedMarks.Engagement_And_Interaction),
+        Time_Management: parseInt(updatedMarks.Time_Management),
       };
       const updated = await databases.updateDocument(databaseId, collectionId, id, marks);
       setStudents((prev) => prev.map((s) => (s.$id === id ? updated : s)));
       setEditStudent(null);
-      Alert.alert('Success', 'Student marks updated successfully');
+      showAlert('Success', 'Student marks updated successfully');
     } catch (error) {
       console.error('❌ Update Error:', error);
-      Alert.alert('Error', 'Failed to update student marks');
+      showAlert('Error', 'Failed to update student marks');
     } finally {
       setLoading(false);
     }
@@ -95,7 +144,7 @@ const StudentMarksList = () => {
 
   const generatePDF = async () => {
     if (Platform.OS === 'web') {
-      Alert.alert('Error', 'PDF export is not supported on web');
+      showAlert('Info', 'For PDF export, please use the mobile app');
       return;
     }
 
@@ -212,10 +261,10 @@ const StudentMarksList = () => {
     try {
       const { uri } = await Print.printToFileAsync({ html });
       await Sharing.shareAsync(uri);
-      Alert.alert('Success', 'PDF generated and shared successfully');
+      showAlert('Success', 'PDF generated and shared successfully');
     } catch (error) {
       console.error('❌ PDF Generation Error:', error);
-      Alert.alert('Error', 'Failed to generate PDF');
+      showAlert('Error', 'Failed to generate PDF');
     }
   };
 
@@ -225,63 +274,101 @@ const StudentMarksList = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Student Marks Management</Text>
+      <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={() => navigation.navigate('Students')}
+        >
+          <Text style={styles.buttonText}>⬅️ Back</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>Student Marks Management</Text>
+      </View>
 
-      {Platform.OS !== 'web' && (
+      {Platform.OS !== 'web' ? (
         <TouchableOpacity style={styles.pdfButton} onPress={generatePDF}>
           <Text style={styles.buttonText}>📄 Generate Report</Text>
         </TouchableOpacity>
+      ) : (
+        <Text style={styles.webInfo}>For full features including PDF export, please use the mobile app</Text>
       )}
 
       {loading ? (
         <ActivityIndicator size="large" color="#005566" />
+      ) : students.length === 0 ? (
+        <Text style={styles.noStudents}>No student records found</Text>
       ) : (
         <ScrollView showsVerticalScrollIndicator={false}>
           {students.map((student) => (
             <View key={student.$id} style={styles.card}>
               <Text style={styles.cardTitle}>Student No: {student.Student_no}</Text>
-              <Text>📅 Year: Y{student.Year}</Text>
-              <Text>📆 Semester: S{student.Semester}</Text>
+              <View style={styles.infoRow}>
+                <Text>📅 Year: Y{student.Year}</Text>
+                <Text>📆 Semester: S{student.Semester}</Text>
+              </View>
               <Text>🖼️ Presentation: {student.Presentation}</Text>
 
               {editStudent === student.$id ? (
                 <>
                   {Object.keys(updatedMarks).map((key) => (
-                    <View key={key} style={styles.row}>
+                    <View key={key} style={styles.markRow}>
                       <Text style={styles.label}>{key.replace(/_/g, ' ')}:</Text>
-                      <TextInput
-                        style={styles.input}
-                        keyboardType="numeric"
-                        value={updatedMarks[key]}
-                        onChangeText={(text) => setUpdatedMarks({ ...updatedMarks, [key]: text })}
-                      />
+                      <View style={styles.inputContainer}>
+                        <TextInput
+                          style={[styles.input, errors[key] && styles.inputError]}
+                          keyboardType="numeric"
+                          value={updatedMarks[key]}
+                          onChangeText={(text) => setUpdatedMarks({ ...updatedMarks, [key]: text })}
+                          maxLength={2}
+                        />
+                        {errors[key] && <Text style={styles.errorText}>{errors[key]}</Text>}
+                      </View>
                     </View>
                   ))}
-                  <TouchableOpacity style={styles.saveButton} onPress={() => updateStudent(student.$id)}>
-                    <Text style={styles.buttonText}>Save Changes</Text>
-                  </TouchableOpacity>
+                  <View style={styles.editButtons}>
+                    <TouchableOpacity 
+                      style={[styles.actionButton, styles.cancelButton]} 
+                      onPress={() => setEditStudent(null)}
+                    >
+                      <Text style={styles.buttonText}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.actionButton, styles.saveButton]} 
+                      onPress={() => updateStudent(student.$id)}
+                    >
+                      <Text style={styles.buttonText}>Save</Text>
+                    </TouchableOpacity>
+                  </View>
                 </>
               ) : (
                 <>
-                  <Text>📚 Content Quality: {student.Content_Quality}</Text>
-                  <Text>🎤 Presentation Skills: {student.Presentation_Skills}</Text>
-                  <Text>🖥️ Slide Design: {student.Slide_Design}</Text>
-                  <Text>🤝 Engagement: {student.Engagement_And_Interaction}</Text>
-                  <Text>⏳ Time Management: {student.Time_Management}</Text>
+                  <View style={styles.marksContainer}>
+                    <Text>📚 Content Quality: {student.Content_Quality}/10</Text>
+                    <Text>🎤 Presentation Skills: {student.Presentation_Skills}/10</Text>
+                    <Text>🖥️ Slide Design: {student.Slide_Design}/10</Text>
+                    <Text>🤝 Engagement: {student.Engagement_And_Interaction}/10</Text>
+                    <Text>⏳ Time Management: {student.Time_Management}/10</Text>
+                  </View>
                   <Text style={styles.overallScore}>
-                    ⭐ Total Score:{' '}
-                    {student.Content_Quality +
+                    ⭐ Total Score: {
+                      student.Content_Quality +
                       student.Presentation_Skills +
                       student.Slide_Design +
                       student.Engagement_And_Interaction +
-                      student.Time_Management}
+                      student.Time_Management
+                    }/50
                   </Text>
-                  <View style={styles.buttonContainer}>
-                    <TouchableOpacity style={styles.editButton} onPress={() => startEdit(student)}>
-                      <Text style={styles.buttonText}>Edit</Text>
+                  <View style={styles.actionButtons}>
+                    <TouchableOpacity 
+                      style={[styles.actionButton, styles.editButton]} 
+                      onPress={() => startEdit(student)}
+                    >
+                      <Text style={styles.buttonText}>✏️ Edit</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.deleteButton} onPress={() => deleteStudent(student.$id)}>
-                      <Text style={styles.buttonText}>Delete</Text>
+                    <TouchableOpacity 
+                      style={[styles.actionButton, styles.deleteButton]} 
+                      onPress={() => confirmDelete(student.$id)}
+                    >
+                      <Text style={styles.buttonText}>🗑️ Delete</Text>
                     </TouchableOpacity>
                   </View>
                 </>
@@ -300,12 +387,35 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#e6f3f7',
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  backButton: {
+    backgroundColor: '#757575',
+    padding: 10,
+    borderRadius: 8, // Fixed from 'border personally'
+    marginRight: 10,
+  },
   title: {
     fontSize: 26,
     fontWeight: 'bold',
     color: '#005566',
     textAlign: 'center',
+    flex: 1,
+  },
+  webInfo: {
+    textAlign: 'center',
+    color: '#666',
     marginBottom: 15,
+    fontStyle: 'italic',
+  },
+  noStudents: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#666',
+    marginTop: 20,
   },
   card: {
     backgroundColor: '#fff',
@@ -324,60 +434,87 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 10,
   },
-  row: {
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  marksContainer: {
+    marginVertical: 10,
+  },
+  markRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 6,
+    marginVertical: 8,
   },
   label: {
     fontSize: 14,
     color: '#333',
+    flex: 1,
+  },
+  inputContainer: {
+    flex: 1,
+    alignItems: 'flex-end',
   },
   input: {
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 5,
-    width: 80,
-    padding: 5,
-    textAlign: 'right',
+    width: 60,
+    padding: 8,
+    textAlign: 'center',
     fontSize: 14,
   },
-  buttonContainer: {
+  inputError: {
+    borderColor: '#d32f2f',
+    backgroundColor: '#ffebee',
+  },
+  errorText: {
+    color: '#d32f2f',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  actionButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 12,
   },
-  editButton: {
-    backgroundColor: '#ff9500',
+  editButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 12,
+  },
+  actionButton: {
     padding: 10,
     borderRadius: 8,
-    flex: 1,
-    marginRight: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 80,
+  },
+  editButton: {
+    backgroundColor: '#ff9500',
   },
   deleteButton: {
     backgroundColor: '#d32f2f',
-    padding: 10,
-    borderRadius: 8,
-    flex: 1,
-    marginLeft: 5,
   },
   saveButton: {
     backgroundColor: '#00796b',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 12,
+    marginLeft: 10,
+  },
+  cancelButton: {
+    backgroundColor: '#757575',
   },
   pdfButton: {
     backgroundColor: '#005566',
     padding: 12,
     borderRadius: 8,
     marginBottom: 15,
+    alignItems: 'center',
   },
   buttonText: {
     color: '#fff',
     fontWeight: '600',
-    textAlign: 'center',
     fontSize: 14,
   },
   overallScore: {
@@ -385,6 +522,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#00796b',
     fontSize: 16,
+    textAlign: 'center',
   },
 });
 
