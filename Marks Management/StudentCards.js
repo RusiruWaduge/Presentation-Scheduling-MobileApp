@@ -10,7 +10,8 @@ import {
   Provider as PaperProvider, 
   Searchbar, 
   Text, 
-  ActivityIndicator 
+  ActivityIndicator,
+  Appbar 
 } from 'react-native-paper';
 
 // Appwrite client setup
@@ -133,6 +134,13 @@ const StudentCards = ({ navigation }) => {
   return (
     <PaperProvider>
       <View style={styles.container}>
+        <Appbar.Header style={styles.header}>
+          <Appbar.Content 
+            title="Students Details" 
+            titleStyle={styles.headerTitle}
+          />
+        </Appbar.Header>
+        
         <Searchbar
           placeholder="Search by name or index number"
           onChangeText={setSearchQuery}
@@ -161,6 +169,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5'
+  },
+  header: {
+    backgroundColor: '#003366',
+  },
+  headerTitle: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   searchBar: {
     margin: 16,
@@ -196,7 +213,7 @@ const styles = StyleSheet.create({
   },
   button: {
     borderRadius: 8,
-    backgroundColor: '#6200ee',
+    backgroundColor: '#003366',
     paddingVertical: 4,
   },
   buttonLabel: {
